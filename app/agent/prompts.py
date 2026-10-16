@@ -24,10 +24,10 @@ def load_yaml(file_path: Path) -> dict[str, Any]:
 
 
 # 当前文件位于 app/agent/prompts.py，parents[1] 即 app 目录
-app_root_path = Path(__file__).parents[1]
-yaml_file_path = app_root_path / "prompt" / "prompts.yml"
+app_root_path = Path(__file__).parents[1] # app
+yaml_file_path = app_root_path / "prompt" / "prompts.yml" #app/prompt/prompts.yaml
 
-prompt_yaml_content = load_yaml(yaml_file_path)
+prompt_yaml_content = load_yaml(yaml_file_path) # 加载提示词
 
 # 主智能体提示词配置
 main_agent_content = prompt_yaml_content["main_agent"]

@@ -48,6 +48,25 @@ def get_db_config():
 
     return config
 
+def get_table_names(cursor):
+    """查询数据库中的真实表名，返回集合"""
+
+    # 1. 执行 SQL
+    cursor.execute("SHOW TABLES")
+
+    # 2. 获取查询结果
+    tables = cursor.fetchall()
+
+    # 3. 创建集合
+    table_names = set()
+
+    # 4. 将每个表名加入集合
+    for table in tables:
+        table_names.add(table[0])
+
+    # 5. 返回表名集合
+    return table_names
+
 
 @tool
 def list_sql_tables() -> str:
@@ -75,19 +94,25 @@ def list_sql_tables() -> str:
     # 这里捕获异常并返回中文提示，避免工具报错直接中断 Agent 执行链路
     try:
         # 使用 with 管理连接和游标，查询结束后自动释放数据库资源
+
+        # conn = connect(**config)  # 连接数据库，拿到连接对象
+        # cursor = conn.cursor()   # 通过连接对象，创建游标对象
+        # Python	作用
+        # conn	    建立与数据库的连接
+        # cursor	同时承担部分 ResultSet 的职责	执行 SQL、读取查询结果
+        # **config把字典展开为命名参数。
         with connect(**config) as conn:
             with conn.cursor() as cursor:
-                sql = "SHOW TABLES"
-                cursor.execute(sql)
+                # 调用公共函数，获取真实表名集合
+                table_names = get_table_names(cursor)
 
-                # SHOW TABLES 返回形如：[("drugs",), ("inventory",), ("sales_records",)]
-                tables = cursor.fetchall()
-                if not tables:
+                # 如果数据库没有表
+                if not table_names:
                     return "没有可用的表"
 
-                # 取每个元组的第一个元素，拼成模型容易阅读的表名列表
-                table_names = [table[0] for table in tables]
-                return f"可用的表有：{', '.join(table_names)}"
+                # 转换成字符串，返回给 Agent
+                # 因为 set 是无序集合，我们用 sorted() 把表名按字母顺序排列，方便每次给 Agent 返回稳定的表名顺序。
+                return f"可用的表有：{', '.join(sorted(table_names))}"
     except Error as e:
         return f"查询出现异常：{str(e)}"
 
@@ -126,16 +151,25 @@ def get_table_data(table_name) -> str:
     try:
         with connect(**config) as conn:
             with conn.cursor() as cursor:
-                # 教程代码直接拼接表名，重点演示 Agent 查询链路；生产环境应改为白名单校验
-                sql = f"SELECT * FROM {table_name} LIMIT 100"
+
+                # 第一步：查询数据库真实存在的表名
+                allowed_tables = get_table_names(cursor)
+
+                # 第二步：检查 Agent 传入的表名
+                if not isinstance(table_name, str) or table_name not in allowed_tables:
+                    return f"不允许查询数据表：{table_name}"
+
+                # 第三步：安全处理表名并执行查询
+                safe_table_name = table_name.replace("`", "``")
+                sql = f"SELECT * FROM `{safe_table_name}` LIMIT 100"
                 cursor.execute(sql)
 
                 # cursor.description 保存查询结果的列元信息
                 # 例如：[("id", ...), ("name", ...), ("age", ...)]
                 # 如果 SQL 没有结果集，description 可能为 None
                 description = cursor.description
-                if not description:
-                    return f"数据表 {table_name} 暂无数据。"
+                if description is None:
+                    return "SQL 查询未产生结果集。"
 
                 # 只取每个列信息元组的第一个元素，也就是列名
                 # 例如：["id", "name", "age"]
@@ -144,6 +178,9 @@ def get_table_data(table_name) -> str:
                 # fetchall 返回表数据，形如：[(1, "张三", 18), (2, "李四", 20)]
                 rows = cursor.fetchall()
 
+                # SQL 查询成功，但没有数据行
+                if not rows:
+                    return f"数据表 {table_name} 暂无数据。"
                 # 把每一行数据从元组转成 CSV 行文本
                 # 例如：(1, "张三", 18) -> "1,张三,18"
                 results = [",".join(map(str, row)) for row in rows]
@@ -191,19 +228,25 @@ def execute_sql_query(query) -> str:
         with connect(**config) as conn:
             with conn.cursor() as cursor:
                 # 当前章节依赖提示词约束模型生成只读查询；生产环境建议在工具层限制 SELECT/SHOW
+                # # 第一步：让 MySQL 执行 SQL 执行查询，准备好可读取的结果。
                 cursor.execute(query)
 
                 # 非查询类 SQL 没有结果集描述，这里统一返回提示，避免工具调用直接抛错给模型
+                # 第二步：获取查询结果的列信息
                 description = cursor.description
                 if not description:
                     return f"执行自定义 SQL 语句没有查询结果，SQL 为：{query}"
                 # description => [("列1", ...), ("列2", ...)]
+                # 只取每个列信息元组的第一个元素，也就是列名
+                # 例如：["id", "name", "age"]
                 columns = [desc[0] for desc in description]
 
-                # rows => [(值1, 值2), (值1, 值2)]
+                # fetchall 返回表数据，形如：[(1, "张三", 18), (2, "李四", 20)]
+                # # 第三步：获取查询出来的数据 从游标中读取所有剩余的数据行
                 rows = cursor.fetchall()
 
                 # 每行元组统一转为逗号分隔文本，便于模型读取和后续整理
+                # 这里的 map() 作用就是：把 row 里面的每个数据都转换成字符串。
                 results = [",".join(map(str, row)) for row in rows]
 
                 # 第一行是列名，后续是查询数据

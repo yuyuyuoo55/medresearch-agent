@@ -26,6 +26,7 @@ dependencies = [
     "ragflow-sdk>=0.1.0",
     "reportlab>=4.0.0",
     "requests>=2.31.0",
+    "rich>=15.0.0",
     "tavily-python==0.7.24",
     "typing-extensions>=4.5.0",
     "uvicorn[standard]>=0.20.0",
@@ -33,3 +34,7 @@ dependencies = [
 
 [tool.uv]
 package = false
+
+[[tool.uv.index]]
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+default = true

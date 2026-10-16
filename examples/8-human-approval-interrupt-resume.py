@@ -122,6 +122,25 @@ result_1 = main_agent.invoke(
 # action_requests 表示模型准备执行、但还没真正执行的高风险工具调用
 # review_configs 表示每个被拦截工具允许的人工决策类型
 interrupts = result_1.get("__interrupt__", [])
+# __interrupt__ 你可以理解为：LangGraph 返回给程序的一份“暂停通知单”。
+# 它不是你自己定义的变量，而是 LangGraph 在执行过程中发生中断时，放到返回结果中的一个特殊键（Key）。
+# {
+#     "messages": [...],
+#     "__interrupt__": [
+#         Interrupt(
+#             value={
+#                 "action_requests": [
+#                     {
+#                         "name": "delete_file",
+#                         "args": {"path": "temp.txt"}
+#                     }
+#                 ],
+#                 "review_configs": [...]
+#             }
+#         )
+#     ]
+# }
+
 
 if interrupts:
     action_requests = interrupts[0].value["action_requests"]

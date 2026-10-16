@@ -14,6 +14,8 @@ from dotenv import find_dotenv, load_dotenv
 from langchain.chat_models import init_chat_model
 from langchain.tools import tool
 from tavily import TavilyClient
+from rich import print as rprint
+
 
 # 读取项目根目录中的 .env，示例依赖 LLM_QWEN_MAX 和 TAVILY_API_KEY
 load_dotenv(find_dotenv())
@@ -29,7 +31,7 @@ tavily_client = TavilyClient(api_key=tavily_key)
 @tool
 def internet_search(
     query: str,
-    max_results: int = 5,
+    max_results: int = 3,
     topic: Literal["news", "finance", "general"] = "general",
     include_raw_content: bool = False,
 ):
@@ -111,7 +113,7 @@ result = deep_agent.invoke(
 # 4. AIMessage(content="...")
 #    模型基于工具返回结果整理出的最终报告。
 #    到这一步 tool_calls 为空，content 中才是用户最终需要阅读的自然语言答案。
-print(result)
+rprint(result)
 
 # messages 的最后一条通常就是 DeepAgent 整理后的最终回答。
 # 如果只关心最终报告，可以直接读取 result["messages"][-1].content，

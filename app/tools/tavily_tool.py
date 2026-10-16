@@ -66,6 +66,6 @@ if __name__ == "__main__":
     # 本地调试入口：直接运行本文件可验证 TAVILY_API_KEY 和 Tavily API 是否可用
     pprint(
         internet_search.invoke(
-            {"query": "2026中国法定节假日放假安排表，我天天都想要放假"}
+            {"query": "查询截至今天 DeepAgents 的公开资料，总结它的主要用途，并查找其全球企业付费客户总数。请给出来源；找不到可靠数据的部分明确说明。"}
         )
     )

@@ -44,6 +44,7 @@ def get_assistant_list() -> str:
         count_chat_info = ""
         for chat in chat_list:
             # 不同版本 SDK 字段可能为空，这里用 getattr 兼容没有绑定知识库的助手
+            # “去 chat 身上找 kb_names，找不到就给我 []。”
             dataset_names = getattr(chat, "kb_names", []) or []
 
             count_chat_info += f"助手名称:{chat.name};功能介绍：{chat.description}; 关联的知识库：{'、'.join(dataset_names)} \n"
@@ -68,9 +69,14 @@ def create_ask_delete(chat_name, question) -> str:
         args={"chat_name": chat_name, "question": question},
     )
 
+    session=None
+    use_chat = None
     try:
         # 先按名称找到 Chat 对象；真正提问时还需要在 Chat 下创建 Session
         chats = ragflow_client.list_chats(name=chat_name)
+        if not chats:
+            return f"没有找到名为「{chat_name}」的聊天助手"
+
         use_chat = chats[0]
 
         # 每次工具调用只创建一个临时会话，避免多轮上下文污染当前问题
@@ -87,14 +93,30 @@ def create_ask_delete(chat_name, question) -> str:
             stream=True,
         )
         result = ""
+        # iter_lines:把服务器返回的数据，一行一行地拿出来。
+        # line 是一个字符串 str。
+        # 它大概长这样：
+        # line = 'data: {"data": {"name": "张三"}}'
+
         for line in response.iter_lines(decode_unicode=True):
+            # 这一行如果是空的，就跳过，不处理。
             if not line:
                 continue
 
             # RAGFlow 流式返回遵循 SSE 风格：每行以 data: 开头，[DONE] 表示结束
+
+            # 原sse=line:'data: {"data": {"name": "张三"}}'
+            # 1.line.removeprefix("data:") =='{"data": {"name": "张三"}}'
+            # 2.strip 去掉多余字符串
+            # 3.json.loads()这个JSON字符串转换成 Python 字典：
             line = line.removeprefix("data:").strip()
+            # 去掉 data: 后可能变成空字符串
+            if not line:
+                continue
+
             if line == "[DONE]":
                 break
+
             data = json.loads(line)
             chunk_data = data.get("data")
             if not isinstance(chunk_data, dict):
@@ -103,26 +125,35 @@ def create_ask_delete(chat_name, question) -> str:
             if answer:
                 # 部分流式片段会返回“截至当前的完整答案”，部分会返回增量内容
                 # 这里兼容两种情况，尽量避免重复拼接
+                # RAGFlow 的流式片段在不同接口或版本下可能有两种形态。一种是“覆盖型完整内容” 一种是"增量型片段"
                 if answer.startswith(result):
                     result = answer
                 elif not result.startswith(answer):
                     result += answer
 
-        # 临时会话只用于本次工具调用，查询结束后删除，避免 RAGFlow 页面堆积无用会话
-        use_chat.delete_sessions(ids=[session.id])
         return result
+
     except Exception as e:
         return f"提问失败，错误原因：{str(e)}"
+    finally:
+        # use_chat 存在吗？
+        #     ↓
+        # 是 → session 存在吗？
+        #           ↓
+        #           是 → 删除这个 session
+        #           否 → 什么都不做
+        if use_chat is not None and session is not None:
+            use_chat.delete_sessions(ids=[session.id])
 
 
-# if __name__ == "__main__":
-#     # 本地调试入口：直接运行本文件可验证 RAGFlow API Key、服务地址和助手名称是否可用
-#     # print(get_assistant_list.invoke({}))
-#     print(
-#         create_ask_delete.invoke(
-#             {
-#                 "chat_name": "电商行业助手",
-#                 "question": "如果我是一个电商平台运营负责人，应该怎样制定 2026 年 AI 应用路线图？",
-#             }
-#         )
-#     )
+if __name__ == "__main__":
+    # 本地调试入口：直接运行本文件可验证 RAGFlow API Key、服务地址和助手名称是否可用
+    # print(get_assistant_list.invoke({}))
+    print(
+        create_ask_delete.invoke(
+            {
+                "chat_name": "电商行业助手",
+                "question": "如果我是一个电商平台运营负责人，应该怎样制定 2026 年 AI 应用路线图？",
+            }
+        )
+    )

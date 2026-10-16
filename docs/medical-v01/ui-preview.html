@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>医研智析 · 当前研究工作台</title>
+<style>
+
+:root{--green:#245c43;--ink:#253d30;--muted:#7b8a80;--line:#e7ece7;--bg:#fafbf9}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}button,textarea,select{font:inherit}button{cursor:pointer;border:0}a{color:var(--green)}button:focus-visible,a:focus-visible,select:focus-visible,summary:focus-visible,textarea:focus-visible{outline:2px solid #7ca58a;outline-offset:4px}.hidden{display:none!important}
+.app{display:grid;grid-template-columns:208px minmax(0,1fr);min-height:100vh}.sidebar{background:#f4f7f2;border-right:1px solid var(--line);padding:32px 22px;display:flex;flex-direction:column;gap:32px}.brand{display:flex;gap:11px;align-items:center}.brandmark{width:34px;height:37px;display:grid;place-items:center;border-radius:10px;background:var(--green);color:#fff;font-size:20px}.brand-name{font-size:20px;font-weight:600;letter-spacing:1px}.brand-en{font-size:8px;letter-spacing:2px;color:#809184}.new{background:var(--green);color:#fff;border-radius:8px;padding:11px 14px;text-align:left;font-size:13px}.plus{font-size:18px;margin-right:9px}.section-label{font-size:10px;color:#98a297;margin:0 10px 13px;letter-spacing:1px}.current{display:flex;align-items:center;gap:9px;padding:9px 10px;color:#38624a;font-size:12px;font-weight:500}.mini-dot{width:5px;height:5px;border-radius:50%;background:#588467;flex-shrink:0}.session-note{font-size:10px;color:#9aa59a;padding:8px 10px}.side-bottom{margin-top:auto}.purpose{font-size:11px;color:#7d8e7e;padding:0 10px;line-height:1.9}.connection{font-size:9px;color:#94a091;padding:20px 10px 0}.connection span{display:inline-block;width:4px;height:4px;background:#91a28f;border-radius:50%;margin-right:4px}.preview-tools{margin:12px 9px 0;color:#9aa597;font-size:10px}.preview-tools select{max-width:150px;font-size:10px;color:#7a8f7d;background:transparent;border:0;padding:5px 0;cursor:pointer}
+.main-shell{min-width:0;display:flex;flex-direction:column}.topbar{height:80px;display:flex;justify-content:space-between;align-items:center;padding:0 38px;background:var(--bg);border-bottom:1px solid var(--line)}.top-title{font-weight:550;font-size:14px;letter-spacing:1px}.top-subtitle{font-size:11px;color:#9aa599;letter-spacing:0;margin-left:14px;font-weight:400}.status{display:inline-flex;align-items:center;gap:8px;color:var(--green);font-size:13px;font-weight:550}.status .dot{font-size:12px;font-style:normal;line-height:1}.body-grid{display:grid;grid-template-columns:minmax(0,1fr) 330px;flex:1}.research{padding:42px 46px 0;min-width:0;display:flex;flex-direction:column}.research-content{width:100%;max-width:790px;margin:0 auto}.kicker{font-size:9px;color:#97a594;letter-spacing:2.4px}.title-row{margin:9px 0 9px}h1{font-weight:600;font-size:28px;letter-spacing:-.8px;line-height:1.5;margin:0}h2{font-size:22px;font-weight:550;letter-spacing:-.4px;margin:0 0 20px}h3{font-size:15px;font-weight:550;margin:28px 0 12px}.metadata{display:flex;align-items:center;gap:0;font-size:11px;color:#97a193;margin-bottom:37px}.metadata>*+*:before{content:'·';margin:0 9px;color:#adb6a9}.metadata strong{font-weight:400;color:#5e7d64}.metadata strong:before{content:'●';font-size:7px;vertical-align:2px;margin-right:6px;color:#4d7e5b}
+.task-label{font-size:11px;color:#8b9c88;margin-bottom:10px}.task{font-size:14px;line-height:1.9;padding:0 0 27px;border-bottom:1px solid var(--line)}.task p{margin:0}.task-tag{display:none}.answer{margin-top:32px}.answer-head{display:flex;align-items:center;gap:9px;margin-bottom:22px;color:#45694c;font-size:12px;font-weight:550}.ai-badge{font-size:9px;letter-spacing:.5px;font-weight:600;color:var(--green);border:1px solid #d7e1d3;border-radius:5px;padding:2px 4px}.answer-head span:last-child{margin-left:auto;font-size:10px;font-weight:400;color:#a0aa9a}.working{padding:4px 0 35px}.working-title{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:500;color:#335d3e}.working-title i{width:7px;height:7px;border-radius:50%;background:#5d8c67}.working p{font-size:13px;color:#83937e;line-height:1.9;margin:12px 0 0 17px}.wait-note,.source-chip,.quiet-lines{display:none}.result{padding:0;background:transparent}.result .kicker{display:none}.result p{color:#60755d;font-size:13px;line-height:2;margin:12px 0}.result table{width:100%;border-collapse:collapse;font-size:12px;margin:16px 0}.result th{color:#84917b;font-weight:400}.result td,.result th{text-align:left;border-bottom:1px solid var(--line);padding:12px 0}.result td:last-child,.result th:last-child{text-align:right}.result td:last-child{font-variant-numeric:tabular-nums;color:#476d4d}.result .scope{font-size:11px;color:#98a18e;margin-top:20px;line-height:1.9}.deliverable-title{margin-top:33px;display:flex;align-items:center;justify-content:space-between}.deliverable-title h3{font-size:13px;margin:0;font-weight:550}.deliverable-title>span{display:none}.file{display:flex;gap:13px;align-items:center;margin:13px 0 5px;padding:16px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.file-icon{font-size:9px;color:#78966f;border:1px solid #dae4d4;border-radius:5px;width:30px;height:36px;display:grid;place-items:center}.filename{font-size:11px;color:#36583b;overflow-wrap:anywhere}.filemeta{font-size:10px;color:#9ba592;margin-top:2px}.download{font-size:12px;white-space:nowrap;margin-left:auto;text-decoration:none;color:var(--green);padding:6px 0 6px 14px}.download:hover{text-decoration:underline}.evidence{font-size:9px;color:#a5ad9e;line-height:1.8;margin:8px 0 25px}
+.composer-wrap{margin-top:auto;padding-top:38px;position:sticky;bottom:0;background:var(--bg);width:100%;max-width:790px;align-self:center}.composer{background:#fff;border:1px solid #dce4d6;border-radius:12px;padding:15px 16px 11px;box-shadow:0 3px 16px #2b4f3203}.composer textarea{font-size:12px;border:0;width:100%;background:transparent;min-height:43px;height:43px;resize:vertical;color:var(--ink);outline:0}.composer textarea::placeholder{color:#a4ad9e}.composer-actions{display:flex;align-items:center;justify-content:space-between;gap:10px}.attach{background:transparent;color:#7b8f74;font-size:11px;padding:3px 0}.attach-note{color:#a8b0a2;font-size:9px;margin-left:10px}.submit{background:var(--green);color:white;border-radius:7px;min-width:31px;height:29px;padding:0 10px;font-size:13px}.cancel{background:transparent;font-size:10px;color:#94a18b;padding:5px 9px}.inline-feedback{color:#8a9c82;font-size:10px;min-height:5px}.inline-feedback:empty{display:none}.composer-foot{font-size:9px;text-align:center;color:#a7afa0;padding:10px 0 15px}
+.process{padding:43px 26px 30px 28px;border-left:1px solid var(--line);background:#f8faf6;min-width:0}.process-top{display:flex;align-items:center;justify-content:space-between}.process-top h2{font-size:20px;font-weight:550;letter-spacing:-.4px;margin:0}.trace-label{display:none}.process-sub{color:#91a088;font-size:12px;margin:7px 0 33px}.timeline{margin-left:8px}.event{position:relative;padding:0 0 29px 25px;border-left:1px solid #dce5d6}.event:last-child{padding-bottom:0;border-left-color:transparent}.event-icon{position:absolute;left:-8px;top:5px;width:15px;height:15px;display:grid;place-items:center;color:#90a488;background:#f8faf6;font-size:14px;line-height:1}.event-title{font-size:15px;font-weight:500;color:#566e4e;line-height:1.7}.event-desc{font-size:13px;color:#91a087;line-height:1.85;margin-top:5px}.event.current .event-icon{color:var(--green)}.event.current .event-title{color:var(--green);font-weight:600}.event.current .event-desc{color:#6d8d61}.event.pending .event-title{color:#95a18c}.event.pending .event-desc{color:#a3ad9a}.technical-details{margin-top:36px;font-size:11px;color:#9ba793}.technical-details summary{cursor:pointer;list-style:none}.technical-details summary:after{content:' ›';font-size:14px}.technical-details[open] summary:after{content:' ⌄'}.technical{white-space:pre-wrap;font:11px/1.9 ui-monospace,Consolas,monospace;color:#83957b;margin-top:14px;overflow-wrap:anywhere}.technical-details p{font-size:10px;color:#9ba78f;line-height:1.9}
+.empty{max-width:790px;margin:45px auto 35px}.empty h1{font-size:38px;line-height:1.5;margin:14px 0 19px}.empty p{font-size:13px;color:#889a7e}.examples{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:38px}.example{border-top:1px solid #dde6d5;background:transparent;text-align:left;padding:17px 0;color:var(--ink)}.example small{font-size:9px;letter-spacing:1px;color:#8da07f}.example b{display:block;font-size:12px;font-weight:500;margin:8px 0}.example span{font-size:10px;color:#99a68e}.empty-mode .body-grid{grid-template-columns:1fr}.empty-mode .process{display:none}.empty-mode .research{padding-bottom:10px}
+[data-phase='failed'] .status{color:#a16550}[data-phase='cancelled'] .status{color:#84907e}
+@media(min-width:1600px){.body-grid{grid-template-columns:minmax(0,1fr) 360px}.research{padding:48px 65px 0}.process{padding-left:34px;padding-right:34px}}
+@media(max-width:1150px){.app{grid-template-columns:175px minmax(0,1fr)}.sidebar{padding:30px 17px}.brand-name{font-size:17px}.brandmark{width:29px;height:32px;font-size:18px}.brand-en{font-size:7px}.body-grid{grid-template-columns:minmax(0,1fr) 292px}.research{padding:36px 29px 0}.process{padding:37px 22px}.topbar{padding:0 29px}.top-subtitle{display:none}.attach-note{display:none}}
+@media(min-width:721px) and (max-width:930px){.app{grid-template-columns:145px minmax(0,1fr)}.sidebar{padding:27px 13px}.brandmark{display:none}.brand-name{font-size:16px}.body-grid{grid-template-columns:minmax(0,1fr) 260px}.research{padding:30px 22px 0}.process{padding:32px 18px}.process-top h2{font-size:19px}h1{font-size:24px}.file{flex-wrap:wrap}.download{margin-left:auto}.examples{grid-template-columns:1fr}.filename{font-size:10px}.metadata{font-size:10px}.metadata>*+*:before{margin:0 5px}}
+@media(max-width:720px){.app{grid-template-columns:1fr}.sidebar{padding:14px 20px;flex-direction:row;gap:13px;align-items:center;border-right:0;border-bottom:1px solid var(--line)}.brandmark{width:26px;height:29px;font-size:16px}.brand-name{font-size:17px}.brand-en,.sidebar-current,.purpose,.connection{display:none}.side-bottom{margin:0}.preview-tools{margin:0}.preview-tools select{max-width:84px;font-size:9px}.new{margin-left:auto;padding:7px 11px;font-size:11px;white-space:nowrap}.plus{font-size:15px;margin-right:4px}.topbar{height:57px;padding:0 22px}.top-title{font-size:12px}.status{font-size:12px}.body-grid{display:flex;flex-direction:column}.research{padding:29px 23px 0}.process{border-left:0;border-top:1px solid var(--line);padding:30px 27px;background:var(--bg)}.event-icon{background:var(--bg)}.composer-wrap{position:static}.empty{margin-top:10px}.empty h1{font-size:30px}.examples{grid-template-columns:1fr;gap:6px}.metadata{margin-bottom:29px;font-size:10px}.file{gap:9px}.filename{font-size:10px}h1{font-size:25px}.result h2{font-size:21px}}
+
+</style></head>
+<body>
+<div class="app" id="app">
+<aside class="sidebar"><div class="brand"><div class="brandmark" aria-hidden="true">研</div><div><div class="brand-name">医研智析</div><div class="brand-en">MEDRESEARCH AI</div></div></div><button class="new" id="newResearch"><span class="plus">＋</span>新建研究</button><div class="sidebar-current"><div class="section-label">当前研究</div><div class="current"><span class="mini-dot"></span><span id="sessionTitle">心血管产品库存分析</span></div><div class="session-note">仅当前会话</div></div><div class="side-bottom"><div class="purpose">医药企业<br>AI 研究分析助手</div><div class="connection"><span></span>静态预览</div><div class="preview-tools"><select id="previewState" aria-label="切换预览状态"><option value="running">预览 · 正在研究</option><option value="completed">预览 · 研究完成</option><option value="failed">预览 · 研究失败</option><option value="cancelled">预览 · 已取消</option><option value="empty">预览 · 空状态</option></select></div></div></aside>
+<div class="main-shell"><header class="topbar"><div class="top-title">医研智析<span class="top-subtitle">医药企业 AI 研究分析助手</span></div><div class="status" id="headerStatus" role="status"><span class="dot"></span>正在研究</div></header>
+<div class="body-grid"><main class="research"><div class="research-content" id="workspace">
+<div class="kicker">CURRENT RESEARCH</div><div class="title-row"><h1>心血管产品库存分析</h1></div><div class="metadata"><strong id="statusMeta">正在研究</strong><span>当前会话</span><span>教学模拟数据</span></div>
+<div class="task-label">用户任务</div><div class="task"><p id="userTask">查询心血管类药品的库存情况，并生成 Markdown 报告。</p><div class="task-tag">业务数据分析 · MySQL</div></div>
+<section class="answer"><div class="answer-head"><span class="ai-badge">AI</span><span>医研智析</span><span id="answerMeta">正在处理</span></div>
+<div id="runningAnswer"><div class="working"><div class="working-title"><i></i>正在处理你的研究任务</div><p>已收到数据库助手与 SQL 工具的调用记录，<br>等待研究结果返回。</p><div class="source-chip"><span class="mini-dot"></span>数据库查询已发起</div><div class="quiet-lines" aria-hidden="true"><span></span><span></span><span></span></div></div><p class="wait-note">回答将在此处逐步呈现，执行过程保留在右侧。</p></div>
+<div id="completedAnswer" class="hidden"><article class="result"><div class="kicker">RESEARCH FINDINGS</div><h2>研究结论</h2><p>基于既有基线报告，以下为教学数据库中部分心血管产品的库存汇总。各产品按其批次库存分别求和。</p><h3>主要发现</h3><table><thead><tr><th>产品名称</th><th>总库存（原报告单位）</th></tr></thead><tbody><tr><td>阿托伐他汀钙片 · 立普妥</td><td>7,500</td></tr><tr><td>阿司匹林肠溶片 · 拜阿司匹灵</td><td>13,500</td></tr><tr><td>硫酸氢氯吡格雷片 · 波立维</td><td>10,900</td></tr></tbody></table><h3>数据依据与分析边界</h3><p>以阿托伐他汀钙片为例，三个批次库存为 1,000、2,500、4,000，合计 7,500。完整产品与批次明细见下方 Markdown。</p><p class="scope">引用 2026-10-16 已生成报告，非实时查询。原报告未写明完整查询条件，也不足以判断库存风险；不补写未验证结论。</p></article><div class="deliverable-title"><h3>交付文件</h3><span></span></div><div class="file"><div class="file-icon" aria-hidden="true">MD</div><div><div class="filename">cardiovascular_inventory_baseline.md</div><div class="filemeta">Markdown · 2.5 KB · 2026-10-16</div></div><a class="download" href="preview-assets/cardiovascular_inventory_baseline.md" download="cardiovascular_inventory_baseline.md">下载 ↓</a></div><p class="evidence">2026-10-16 基线报告原样副本</p></div>
+</section></div>
+<section class="empty hidden" id="empty"><div class="kicker">MEDICAL BUSINESS RESEARCH</div><h1>让业务问题，<br>成为有据可查的研究结论。</h1><p>整合业务数据、内部资料与公开信息，交付清晰的分析报告。</p><div class="examples"><button class="example" data-prompt="查询心血管类药品的库存情况，并生成 Markdown 报告。"><small>01 / 业务数据</small><b>药品销售与库存分析</b><span>查询销售变化与库存分布</span></button><button class="example" data-prompt="根据预先配置的内部知识库整理产品资料。"><small>02 / 内部资料</small><b>内部产品资料研究</b><span>研究预先配置的企业知识库</span></button><button class="example" data-prompt="检索公开医药企业与行业信息，整理来源摘要。"><small>03 / 公开信息</small><b>外部市场信息研究</b><span>整理公开动态与资料来源</span></button></div></section>
+<div class="composer-wrap"><form class="composer" id="composer"><textarea id="prompt" aria-label="研究任务" placeholder="输入研究任务，继续探索业务问题…"></textarea><div class="composer-actions"><div><button class="attach" type="button" id="attach">＋ 会话附件</button><span class="attach-note">不会自动导入知识库</span></div><div><button type="button" class="cancel" id="cancel">取消任务</button> <button class="submit" type="submit" id="submit" aria-label="提交任务预览">↑</button></div></div><div class="inline-feedback" id="feedback" aria-live="polite"></div></form><div class="composer-foot">仅供医药企业业务演示 · 不提供临床用药建议</div></div>
+</main>
+<aside class="process" id="process" aria-label="Agent 执行过程"><div class="process-top"><h2>Agent 执行过程</h2><span class="trace-label">ACTIVITY</span></div><p class="process-sub">与研究回答同步呈现</p><div class="timeline" id="timeline"><div class="event confirmed"><span class="event-icon">✓</span><div class="event-title">研究任务已启动</div><div class="event-desc">当前研究已进入处理流程</div></div><div class="event"><span class="event-icon">·</span><div class="event-title">数据库助手</div><div class="event-desc">已收到助手调用记录</div></div><div class="event"><span class="event-icon">·</span><div class="event-title">查询业务数据</div><div class="event-desc">已收到 SQL 工具开始记录</div></div><div class="event hidden" id="markdownEvent"><span class="event-icon">·</span><div class="event-title">整理报告文件</div><div class="event-desc">已收到 Markdown 工具调用记录</div></div><div class="event confirmed hidden" id="resultEvent"><span class="event-icon">✓</span><div class="event-title">研究结果已返回</div><div class="event-desc">最终回答与实际文件均有基线证据</div></div></div><p id="noEvents" class="process-sub hidden">尚未连接服务，没有收到当前任务的真实事件。</p><details class="technical-details"><summary>技术详情</summary><div class="technical">依据：2026-10-16 既有基线记录。
+数据库助手 / SQL / generate_markdown 调用，task_result 最终事件。
+只有开始记录的工具不标记成功。
+SQL 原文未载入，未生成模拟 SQL 或 JSON。
+报告：2590 字节，原样副本。</div><p>这是历史基线的静态排版，非实时运行。失败和取消只展示样式，不表示发生过对应事件。未调用 RAGFlow 或网络搜索。</p></details></aside>
+</div></div></div>
+
+<script>
+
+const $ = id => document.getElementById(id);
+let state = 'running';
+function setState(next, replay = true) {
+ state=next;
+ const done=next==='completed', empty=next==='empty', interrupted=next==='failed'||next==='cancelled';
+ if(interrupted)replay=false;
+ const labels={running:['正在研究','●'],completed:['研究完成','✓'],failed:['研究失败','×'],cancelled:['已取消','—'],empty:['等待研究','○']};
+ const [label,symbol]=labels[next];
+ $('app').dataset.phase=next;
+ $('app').classList.toggle('empty-mode',empty);
+ $('workspace').classList.toggle('hidden',empty);
+ $('empty').classList.toggle('hidden',!empty);
+ $('runningAnswer').classList.toggle('hidden',done);
+ $('completedAnswer').classList.toggle('hidden',!done);
+ $('timeline').classList.toggle('hidden',!replay);
+ $('noEvents').classList.toggle('hidden',replay);
+ $('noEvents').textContent=interrupted?'当前仅为状态样式示意，没有新增执行事件。':'未连接服务，尚未收到执行事件。';
+ $('markdownEvent').classList.toggle('hidden',!done);
+ $('resultEvent').classList.toggle('hidden',empty||interrupted);
+ $('cancel').classList.toggle('hidden',done||empty||interrupted);
+ $('headerStatus').replaceChildren();
+ const icon=document.createElement('span');icon.className='dot';icon.textContent=symbol;
+ $('headerStatus').append(icon,document.createTextNode(label));
+ $('statusMeta').textContent=label;
+ $('answerMeta').textContent='';
+ $('sessionTitle').textContent=empty?'尚未提交研究':'心血管产品库存分析';
+ $('userTask').textContent='查询心血管类药品的库存情况，并生成 Markdown 报告。';
+ const events=document.querySelectorAll('.event');
+ events.forEach(event=>event.classList.remove('current','pending'));
+ events[0].querySelector('.event-icon').textContent='●';
+ events[1].querySelector('.event-icon').textContent='○';
+ events[2].querySelector('.event-icon').textContent=done?'○':'●';
+ if(next==='running'&&replay)events[2].classList.add('current');
+ $('resultEvent').classList.toggle('pending',!done);
+ $('resultEvent').querySelector('.event-title').textContent='最终结果';
+ $('resultEvent').querySelector('.event-desc').textContent=done?'研究回答与报告已返回':'等待返回';
+ $('resultEvent').querySelector('.event-icon').textContent=done?'●':'○';
+ const title=document.querySelector('.working-title');
+ title.lastChild.textContent=interrupted?(next==='failed'?'研究未能完成':'研究已取消'):replay?'正在处理你的研究任务':'等待连接研究服务';
+ document.querySelector('.working p').textContent=interrupted?'当前仅预览状态样式。':replay?'数据库查询已发起，等待结果返回。':'任务已提交到预览工作区，尚未连接实际服务。';
+ $('prompt').placeholder=empty?'描述你希望研究的业务问题…':'输入研究任务，继续探索业务问题…';
+ $('previewState').value=next;
+ $('feedback').textContent='';
+}
+$('previewState').addEventListener('change',event=>setState(event.target.value));
+$('newResearch').addEventListener('click',()=>{setState('empty');$('prompt').value='';$('prompt').focus();});
+$('composer').addEventListener('submit',event=>{
+ event.preventDefault();
+ const prompt=$('prompt').value.trim();
+ if(!prompt){$('feedback').textContent='请先输入研究任务。';$('prompt').focus();return;}
+ if(state!=='empty'){$('feedback').textContent='静态预览未发送任务；可用“新建研究”体验同页提交。';return;}
+ setState('running',false);$('userTask').textContent=prompt;$('prompt').value='';
+});
+$('attach').addEventListener('click',()=>{$('feedback').textContent='会话附件入口预览，当前不会上传文件。';});
+$('cancel').addEventListener('click',()=>{$('feedback').textContent='取消入口预览，当前没有实际运行的任务。';});
+document.querySelectorAll('[data-prompt]').forEach(button=>button.addEventListener('click',()=>{$('prompt').value=button.dataset.prompt;$('prompt').focus();}));
+setState('running');
+
+</script></body></html>

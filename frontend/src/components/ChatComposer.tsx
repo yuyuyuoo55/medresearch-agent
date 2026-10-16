@@ -82,7 +82,7 @@ export function ChatComposer({
   }
 
   return (
-    <section className="chat-composer" aria-label="发送研搜任务">
+    <section className="chat-composer" aria-label="发送研究任务">
       {uploadedItems.length > 0 ? (
         <div className="attachment-strip" aria-label="当前会话附件">
           {uploadedItems.map((item) => (
@@ -102,13 +102,13 @@ export function ChatComposer({
               {item.name}
             </span>
           ))}
-          {isUploading ? <span className="attachment-uploading">附着中...</span> : null}
+          {isUploading ? <span className="attachment-uploading">上传中…</span> : null}
         </div>
       ) : null}
 
       <div className="composer-shell">
         <textarea
-          aria-label="研搜任务"
+          aria-label="研究任务"
           disabled={isRunning}
           onChange={(event) => onQueryChange(event.target.value)}
           onKeyDown={(event) => {
@@ -117,7 +117,7 @@ export function ChatComposer({
               onSubmit();
             }
           }}
-          placeholder="向 DeepSearch Agents 发送任务..."
+          placeholder="描述你希望研究的业务问题…"
           value={query}
         />
 
@@ -141,14 +141,15 @@ export function ChatComposer({
               }}
               showUploadList={false}
             >
-              <Tooltip title="选择附件">
+              <Tooltip title="会话附件仅供当前任务使用，不会自动导入 RAGFlow">
                 <Button
-                  aria-label="选择附件"
+                  aria-label="会话附件"
                   className="composer-icon-button"
                   disabled={isRunning || isUploading}
                   icon={<PaperClipOutlined />}
-                  shape="circle"
-                />
+                >
+                  会话附件
+                </Button>
               </Tooltip>
             </Upload>
           </div>

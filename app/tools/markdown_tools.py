@@ -18,6 +18,22 @@ from app.api.monitor import monitor
 from app.utils.path_utils import resolve_path
 
 
+# session_dir
+#     ↓
+# “我的活动范围在哪里？”
+#
+# path
+#     ↓
+# “活动范围里面的哪个子目录？”
+#
+# filename
+#     ↓
+# “具体文件叫什么？”
+#
+# content
+#     ↓
+# “文件里面写什么？”
+
 @tool
 def generate_markdown(
     content: Annotated[str, "要写入Markdown文档的文本内容"],
@@ -38,16 +54,27 @@ def generate_markdown(
         filename += ".md"
 
     # session_dir 由 run_deep_agent 写入 ContextVar，保证文件写入当前会话工作目录
+    # 系统决定这个用户这次会话的大根目录在哪里
     session_dir = get_session_context()
     print(f"[MarkdownTool] 当前会话目录: {session_dir}")
 
     # 先把模型传入的 path/filename 合成一个逻辑路径，再交给 resolve_path 做统一清洗
+    # 模型决定:"我要在这个会话目录下面的哪个子目录里保存文件。”
+    # 情况① 不需要分类:
+    # A001 /
+    # └── 研究报告.md
+    # 情况② 模型想把报告放到 reports 文件夹
+    # A001/
+    # └── reports/
+    #     └── 研究报告.md
+
     if path and path != ".":
-        full_input_path = str(Path(path) / filename)
+        full_input_path = str(Path(path) / filename) # "reports/研究报告.md"
     else:
-        full_input_path = filename
+        full_input_path = filename # "研究报告.md"
+
     full_path_str = resolve_path(full_input_path, session_dir)
-    file_path = Path(full_path_str)
+    file_path = Path(full_path_str) # D:/deepagent/sessions/A001/reports/研究报告.md
 
     parent_dir = file_path.parent
 
@@ -55,6 +82,8 @@ def generate_markdown(
         f"[MarkdownTool] Debug: parent_dir={parent_dir}, filename={filename}, full_path={file_path}"
     )
 
+    # file_path 是“我要创建的文件”，file_path.parent 是“这个文件要住的文件夹”。
+    # 所以拿 parent 出来，是为了先把文件的“家”建好。
     try:
         # 允许模型指定 session_dir 下的子目录；不存在时自动创建
         if not parent_dir.exists():

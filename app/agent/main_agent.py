@@ -45,7 +45,7 @@ main_agent = create_deep_agent(
 # 当前文件位于 app/agent/main_agent.py，parents[1] 即 app 目录
 project_root_path = Path(__file__).parents[1].resolve()
 
-
+# 先把“这个任务的工作环境”准备好，再让 Agent 开始干活。
 async def run_deep_agent(task_query, session_id):
     """
     异步流式执行主智能体
@@ -55,6 +55,8 @@ async def run_deep_agent(task_query, session_id):
     :param task_query: 前端提交的原始任务问题
     :param session_id: 当前任务 ID，同时用于 thread_id、输出目录和 WebSocket 定向推送
     """
+
+    # 第一步：创建当前会话输出目录 session_dir
     print(f"[MainAgent] 开始执行会话，session_id={session_id}")
 
     # 每个会话独立使用 output/session_{session_id}，避免不同用户的产物互相覆盖
@@ -62,16 +64,21 @@ async def run_deep_agent(task_query, session_id):
     session_dir.mkdir(parents=True, exist_ok=True)
 
     # 前端和工具使用绝对路径；提示词里只给模型相对路径，降低模型误用系统绝对路径的概率
-    session_dir_str = str(session_dir).replace("\\", "/")
+    session_dir_str = str(session_dir).replace("\\", "/")# 给前端和工具使用
     relative_session_dir_str = str(session_dir.relative_to(project_root_path)).replace(
         "\\", "/"
-    )
+    )# 给大模型提示词使用 	output/session_xxx
 
+
+
+    # 第二步：处理上传文件
     # 上传文件先落在 updated/session_{session_id}，执行前复制到本次 output 工作目录
+    # 为什么复制 因为output文件夹有生成文件和用户上传文件 不用查两个目录
     # 这样读文件工具和生成文件工具都只需要围绕同一个 session_dir 工作
     updated_dir_path = project_root_path / "updated" / f"session_{session_id}"
     updated_info_prompt = ""
     if updated_dir_path.exists():
+        # updated_dir_path.iterdir()：把这个文件夹里面的东西一个一个列出来。
         files = [f.name for f in updated_dir_path.iterdir() if f.is_file()]
         if files:
             for filename in files:
@@ -85,6 +92,7 @@ async def run_deep_agent(task_query, session_id):
                 + "\n    请优先使用工具（read_file_content）读取并参考这些文件。"
             )
 
+    # 第三步：绑定 ContextVar 并推送会话目录
     # ContextVar 让深层工具无需显式传参，也能拿到当前会话目录和 WebSocket thread_id
     session_dir_token = set_session_context(session_dir_str)
     session_id_token = set_thread_context(session_id)
@@ -92,9 +100,7 @@ async def run_deep_agent(task_query, session_id):
     # 前端拿到工作目录后，可以展示本次任务生成的 Markdown/PDF 等产物
     monitor.report_session_dir(session_dir_str)
 
-    # checkpointer 依赖 thread_id 区分会话记忆；同一 session_id 会复用同一条执行上下文
-    config = {"configurable": {"thread_id": session_id}}
-
+    # 第四步：构建工作目录提示词
     # 工作环境指令是运行时动态补充的，约束模型只在当前会话目录读写文件
     path_instruction = f"""
     【工作环境指令】
@@ -108,6 +114,10 @@ async def run_deep_agent(task_query, session_id):
     4. 若存在上传文件，请先分析内容
     """
 
+    # 第五步：使用 main_agent.astream 执行
+    # checkpointer 依赖 thread_id 区分会话记忆；同一 session_id 会复用同一条执行上下文
+    config = {"configurable": {"thread_id": session_id}}
+
     try:
         # astream 会持续产出模型节点、工具节点和子智能体节点的状态片段
         async for chunk in main_agent.astream(
@@ -115,12 +125,19 @@ async def run_deep_agent(task_query, session_id):
             config=config,
         ):
             # chunk 形如 {"model": {"messages": [...]}}，这里主要关心模型最新消息
+
+     # 第六步：解析流式 chunk
             for node_name, state in chunk.items():
+
                 if not state or "messages" not in state:
                     continue
+                # 为什么 DeepAgent 这里可能没有 messages？
+                # 因为 Agent 运行过程中拿到的 state 不一定每一次都是完整的消息状态。
+                # 我现在只想处理包含消息的 state。
                 messages = state["messages"]
                 if messages and isinstance(messages, list):
-                    last_msg = messages[-1]
+                    last_msg = messages[-1] # 取到最后一条消息
+                    #  情况一：调用子智能体
                     if node_name == "model":
                         if last_msg.tool_calls:
                             # DeepAgents 调用子智能体时，本质上会产生名为 task 的工具调用
@@ -135,6 +152,7 @@ async def run_deep_agent(task_query, session_id):
                                             ]
                                         },
                                     )
+                    #  情况二：主智能体返回最终结果
                         elif last_msg.content:
                             # 模型没有继续调用工具时，最新文本内容就是本轮可反馈给前端的结果
                             print(
@@ -143,6 +161,7 @@ async def run_deep_agent(task_query, session_id):
                             monitor.report_task_result(last_msg.content)
 
     except asyncio.CancelledError:
+        # 如果这个异步任务被取消了，就执行“任务已取消”的处理，然后把这个取消继续往上抛。
         monitor.report_task_cancelled()
         raise
     except Exception as e:

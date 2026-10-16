@@ -35,41 +35,9 @@ interface ConversationThreadProps {
 }
 
 const TASK_EXAMPLES = [
-  {
-    tool: "网络搜索工具",
-    title: "联网趋势研判",
-    prompt:
-      "请使用网络搜索工具，检索 2026 年跨境电商 AI 客服趋势，列出 5 条关键变化，并附上来源链接。",
-    icon: <CloudServerOutlined aria-hidden />,
-  },
-  {
-    tool: "数据库查询工具",
-    title: "药品库存排查",
-    prompt:
-      "请请使用数据库查询工具，查询库存大于 100 的药品，按库存量升序列出药品名称、批次号、仓库位置和过期日期。",
-    icon: <DatabaseOutlined aria-hidden />,
-  },
-  {
-    tool: "RAGFlow 知识库",
-    title: "内部文档问答",
-    prompt:
-      "请使用 RAGFlow 助手，查询公司内部白皮书中关于品类策略的内容，并整理成三条可执行建议。",
-    icon: <FileSearchOutlined aria-hidden />,
-  },
-  {
-    tool: "文件读取工具",
-    title: "上传文件分析",
-    prompt:
-      "请使用文件读取工具，读取我上传的文件，提炼核心观点、风险点和待补充信息，并给出下一步分析计划。",
-    icon: <FileTextOutlined aria-hidden />,
-  },
-  {
-    tool: "Markdown/PDF 工具",
-    title: "生成交付报告",
-    prompt:
-      "请使用 Markdown 文档生成工具和 Markdown 转 PDF 工具，基于本次调研结果生成一份 Markdown 报告，并转换成 PDF 保存到当前工作目录。",
-    icon: <FileMarkdownOutlined aria-hidden />,
-  },
+  { tool: "01 / 业务数据", title: "药品销售与库存分析", description: "查询销售变化与库存分布", prompt: "请查询心血管类药品的库存情况，包括药品名称、库存数量、批次、仓库和效期，并生成 Markdown 报告。", icon: <DatabaseOutlined aria-hidden /> },
+  { tool: "02 / 内部资料", title: "内部产品资料研究", description: "整理预先配置的企业知识库", prompt: "请根据内部资料，查询立普妥的内部产品编号、分类、资料版本和业务备注，注明资料来源；未提供的信息请明确说明。", icon: <FileSearchOutlined aria-hidden /> },
+  { tool: "03 / 公开信息", title: "外部市场信息研究", description: "整理公开动态与资料来源", prompt: "请检索公开医药企业与行业信息，整理研究摘要并附来源链接，区分公开事实和分析判断。", icon: <CloudServerOutlined aria-hidden /> },
 ];
 
 function formatTime(value: string): string {
@@ -246,7 +214,7 @@ function ArtifactShelf({ files }: { files: OutputFile[] }) {
           </span>
           <div className="artifact-copy">
             <strong title={file.name}>{file.name}</strong>
-            <span>{formatBytes(file.size)}</span>
+            <span>{file.name.toLowerCase().endsWith(".md") ? "Markdown" : file.name.toLowerCase().endsWith(".pdf") ? "PDF" : "文件"} · {formatBytes(file.size)}</span>
           </div>
           <Tooltip title="下载">
             <Button
@@ -264,30 +232,7 @@ function ArtifactShelf({ files }: { files: OutputFile[] }) {
 }
 
 function ThinkingLoader({ durationLabel }: { durationLabel: string }) {
-  return (
-    <div
-      className="thinking-loader"
-      aria-live="polite"
-      aria-label="正在生成回复"
-    >
-      <div className="loader-status">
-        <span className="loader-pulse" aria-hidden />
-        <strong>正在研搜</strong>
-        <span className="loader-duration">已思考 {durationLabel}</span>
-        <span className="loader-dots" aria-hidden>
-          <i />
-          <i />
-          <i />
-        </span>
-      </div>
-      <div className="loader-track" aria-hidden />
-      <ul className="loader-steps" aria-hidden>
-        <li>理解问题</li>
-        <li>调度工具</li>
-        <li>汇总答案</li>
-      </ul>
-    </div>
-  );
+  return <div className="thinking-loader" aria-live="polite" aria-label="正在处理研究任务"><strong><span className="session-dot" />正在处理你的研究任务</strong><p>等待助手与工具返回结果</p><span>已用时 {durationLabel}</span></div>;
 }
 
 function AssistantMessage({
@@ -313,27 +258,29 @@ function AssistantMessage({
 
   const durationLabel = getThinkingDuration(events, timestamp, isRunning, now);
   const isCancelled = events.some((event) => event.event === "task_cancelled");
+  const hasError = events.some((event) => event.event === "error");
+  const hasResult = events.some((event) => event.event === "task_result");
   const syncLabel = isRunning
     ? `生成中 · 思考 ${durationLabel}`
-    : `${isCancelled ? "已取消" : "已同步"} · 用时 ${durationLabel}`;
+    : `${hasError ? "任务出错" : isCancelled ? "已取消" : hasResult ? "任务结束" : "已停止"} · 用时 ${durationLabel}`;
 
   return (
     <article className="chat-message chat-message--assistant">
       <div className="message-avatar">AI</div>
       <div className="message-bubble">
         <div className="message-meta">
-          <span>DeepSearch Agents</span>
+          <span>医研智析</span>
           <time>{syncLabel}</time>
         </div>
 
         <details
           className="thinking-block"
-          open={isRunning || events.length > 0}
+
         >
           <summary>
             <span>
               <BranchesOutlined aria-hidden />
-              深度研搜过程
+              执行详情
             </span>
             <strong>{events.length}</strong>
           </summary>
@@ -349,7 +296,7 @@ function AssistantMessage({
             {isRunning ? (
               <ThinkingLoader durationLabel={durationLabel} />
             ) : (
-              "任务完成后会在这里显示最终回复。"
+              "当前没有最终回答。"
             )}
           </div>
         )}
@@ -361,7 +308,7 @@ function AssistantMessage({
           <summary>
             <span>
               <FileSearchOutlined aria-hidden />
-              输出文件
+              交付文件
             </span>
             <strong>{files.length}</strong>
           </summary>
@@ -381,14 +328,14 @@ export function ConversationThread({
       <div className="conversation-empty">
         <div className="empty-examples">
           <div className="empty-examples-copy">
-            <span className="panel-kicker">TASK EXAMPLES</span>
-            <h3>选择一个工具任务开始</h3>
+            <span className="panel-kicker">MEDICAL BUSINESS RESEARCH</span>
+            <h1>让业务问题，<br />成为有据可查的研究结论。</h1>
             <p>
-              每个示例会触发不同工具路径，执行轨迹和输出文件会直接出现在对话里。
+              整合业务数据、内部资料与公开信息，交付清晰的分析报告。
             </p>
           </div>
 
-          <div className="example-grid" aria-label="研搜任务示例">
+          <div className="example-grid" aria-label="研究场景">
             {TASK_EXAMPLES.map((example) => (
               <button
                 className="example-card"
@@ -400,7 +347,7 @@ export function ConversationThread({
                 <span className="example-copy">
                   <span>{example.tool}</span>
                   <strong>{example.title}</strong>
-                  <small>{example.prompt}</small>
+                  <small>{example.description}</small>
                 </span>
               </button>
             ))}
@@ -417,7 +364,7 @@ export function ConversationThread({
           <article className="chat-message chat-message--user">
             <div className="message-bubble">
               <div className="message-meta">
-                <span>你</span>
+                <span>用户任务</span>
                 <time dateTime={turn.timestamp}>
                   {formatTime(turn.timestamp)}
                 </time>

@@ -54,8 +54,9 @@ def upload_file_to_knowledge_base(kb_id, file_paths):
     :param file_paths: 本地文件路径列表
     """
     # 先根据知识库 ID 查询 Dataset 对象，确认文件会上传到目标知识库
+    # 去 RAGFlow 查询第 1 页的知识库，每页最多 10 个，并且查询指定 ID 的知识库。
     datasets = ragflow_client.list_datasets(id=kb_id, page=1, page_size=10)
-    dataset = datasets[0]
+    dataset = datasets[0] #取到就代表第一个知识库对象。
 
     # RAGFlow upload_documents 接收的是文档字典列表：
     # display_name/name 用于页面展示，blob 存放文件二进制内容

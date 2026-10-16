@@ -1,3 +1,21 @@
+# 医研智析 V0.1
+
+面向医药企业业务分析的 AI 研究助手 Demo，基于原版「深度研搜」教程工程。正式 React 前端已完成医疗绿色视觉移植：研究回答、真实 Agent 事件与报告文件在同一个工作台呈现。
+
+![医研智析正式 React 首页](docs/medical-v01/react-home-desktop.png)
+
+支持当前会话任务提交、取消、附件上传、WebSocket 执行过程、Markdown 回答与真实报告文件下载。会话附件不等于 RAGFlow 自动入库；不提供历史任务恢复。库存与销售使用教学模拟数据，不用于临床决策。
+
+- [正式 React 检查与证据边界（2026-10-17）](docs/medical-v01/verification.md)：TypeScript、Vite 构建及免费界面检查通过；未重新运行付费综合任务。
+- [历史业务验收记录（2026-10-16）](docs/medical-v01/final-acceptance.md)：保留当时结果和限制，部分界面、配置描述为历史状态。
+- [Demo 数据说明](docs/medical-v01/demo-data.md)
+- [架构与部署资料](docs/medical-v01/architecture-deployment.md)：结合下方原教程及 `.env.example` 配置；其中 UI 实施进度描述早于正式移植，以本页及正式检查记录为准。
+- [早期静态设计原型](docs/medical-v01/ui-preview.html)：设计参考，非正式 React 运行证据。
+
+原架构与基础源码来自 [didilili/deepsearch-agents](https://github.com/didilili/deepsearch-agents)，下方保留教程原说明及 Git 历史。本仓库不宣称基础架构完全原创；当前未找到上游许可证文件，许可范围尚待核实，不擅自添加开源许可证。
+
+---
+
 <div align='center'>
   <h1 style="margin-top: 15px;">「深度研搜」对话式多智能体研究系统</h1>
   <h4><b>deepsearch-agents</b></h4>

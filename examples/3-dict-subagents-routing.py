@@ -123,4 +123,4 @@ def test_stream(query):
 test_stream("北京今天的天气怎么样？")
 # test_stream("998+889 运算后等于多少？")
 # test_stream("请将'你是最棒的'翻译成英文，并且查询今天北京的天气信息。")
-test_stream("请将'你是最棒的'翻译成英文。")
+# test_stream("请将'你是最棒的'翻译成英文。")

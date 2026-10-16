@@ -1,0 +1,16 @@
+{
+  "case": "A",
+  "evidence": "existing real UI run, not re-invoked",
+  "thread_id": "f351fdc8-52f5-4e82-99e6-0bbaf35afec4",
+  "file": "心血管类药品库存报告.md",
+  "bytes": 3094,
+  "sha256": "5ff60d0151fb3d052d963e1e216695ab5b59b27e06f8b7018e8b06ada6b5a6c8",
+  "files_status": 200,
+  "listed": true,
+  "download_status": 200,
+  "download_matches_disk": true,
+  "mysql_matched_rows": 18,
+  "report_missing_fields": [],
+  "write_grants": false,
+  "limitation": "报告称库存充足，但SQL未查数量或需求，属无依据结论；2027年之后表述不严谨。"
+}

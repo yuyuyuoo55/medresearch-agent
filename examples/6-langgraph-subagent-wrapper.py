@@ -28,7 +28,8 @@ llm = init_chat_model(
     model_provider="openai",
 )
 
-
+# ----------------1.定义state------------------------------------
+# LangGraph 子图要接入 DeepAgents，最关键的要求是：State 里必须包含 messages 字段。
 class ResearchPlanState(TypedDict):
     # DeepAgents 调用 LangGraph 子图时，会通过 messages 传入任务，也会从 messages 读取结果。
     # add_messages 表示节点返回的新消息会追加到消息链，而不是覆盖历史消息。
@@ -37,7 +38,8 @@ class ResearchPlanState(TypedDict):
     depth: Literal["quick", "deep"]
     plan: list[str]
 
-
+# -------------------2.定义节点---------------------
+# 获取用户问题信息节点 判断主题和研究深度
 def extract_topic(state: ResearchPlanState):
     """从用户任务中提取研究主题，并判断是否需要深度研究。"""
     task = state["messages"][-1].content
@@ -61,12 +63,12 @@ def extract_topic(state: ResearchPlanState):
         "messages": [AIMessage(content=f"已识别研究主题：{topic}；研究深度：{depth}")],
     }
 
-
+# 路由节点
 def route_by_depth(state: ResearchPlanState):
     """条件边：根据研究深度选择普通规划或深度规划。"""
     return state["depth"]
 
-
+# 普通查询节点
 def build_quick_plan(state: ResearchPlanState):
     """普通查询规划：适合简短问答或轻量资料整理。"""
     topic = state["topic"]
@@ -81,7 +83,7 @@ def build_quick_plan(state: ResearchPlanState):
         "messages": [AIMessage(content="已生成普通研究计划。")],
     }
 
-
+# 深度调研节点
 def build_deep_plan(state: ResearchPlanState):
     """深度研究规划：适合报告、趋势分析、行业调研等长链路任务。"""
     topic = state["topic"]
@@ -98,7 +100,7 @@ def build_deep_plan(state: ResearchPlanState):
         "messages": [AIMessage(content="已生成深度研究计划。")],
     }
 
-
+# 内容返回节点-返回输出给主agent
 def finalize_plan(state: ResearchPlanState):
     """把规划步骤整理成一条 AIMessage，作为 LangGraph 子智能体的返回结果。"""
     plan_text = "\n".join(
@@ -108,13 +110,16 @@ def finalize_plan(state: ResearchPlanState):
     print("【LangGraph】汇总研究计划")
     return {"messages": [AIMessage(content=final)]}
 
+# -----------------------3.连接各节点构件图------------
 
+# 初始化工作流和初始化节点
 workflow = StateGraph(ResearchPlanState)
 workflow.add_node("extract_topic", extract_topic)
 workflow.add_node("quick_plan", build_quick_plan)
 workflow.add_node("deep_plan", build_deep_plan)
 workflow.add_node("finalize_plan", finalize_plan)
 
+# 指定 LangGraph 工作流从 extract_topic 这个节点开始执行。
 workflow.set_entry_point("extract_topic")
 workflow.add_conditional_edges(
     "extract_topic",
@@ -128,9 +133,10 @@ workflow.add_edge("quick_plan", "finalize_plan")
 workflow.add_edge("deep_plan", "finalize_plan")
 workflow.add_edge("finalize_plan", END)
 
+# 编译工作流
 compiled_graph = workflow.compile()
 
-
+# CompiledSubAgent可以接入已有 LangGraph / LangChain / Runnable
 research_planner_graph = CompiledSubAgent(
     name="research_planner_graph",
     description="用于把开放研究问题拆解成可执行的研究计划，适合行业趋势、技术调研、报告规划等任务。",

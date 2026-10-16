@@ -21,10 +21,11 @@ llm = init_chat_model(model="qwen-max", model_provider="openai")
 
 # Skill 文件需要通过 Backend 暴露给 Agent
 # 这里把当前示例文件所在目录作为根目录，后续 skills 路径都相对于它查找
+# 当前文件在 examples/ 下，所以 current_dir 指向 examples/
 current_dir = Path(__file__).parent.resolve()
 file_backend = FilesystemBackend(
-    root_dir=current_dir,
-    virtual_mode=True,
+    root_dir=current_dir,# Agent 能访问的文件系统根目录
+    virtual_mode=True, # 开启虚拟沙箱，限制 Agent 只能在这个根目录下访问文件
 )
 
 

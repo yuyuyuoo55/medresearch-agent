@@ -1,0 +1,159 @@
+{
+  "checked_at": "2026-10-16T23:43:27.475419+08:00",
+  "source": "teaching Demo data; direct readonly SELECT",
+  "rows": [
+    {
+      "generic_name": "阿托伐他汀钙片",
+      "brand_name": "立普妥",
+      "quantity_on_hand": 1000,
+      "batch_number": "MY-250101-A",
+      "warehouse_location": "天津一号库-贵重药区",
+      "expiry_date": "2027-01-01"
+    },
+    {
+      "generic_name": "阿托伐他汀钙片",
+      "brand_name": "立普妥",
+      "quantity_on_hand": 2500,
+      "batch_number": "MY-250615-B",
+      "warehouse_location": "北京二号库-贵重药区",
+      "expiry_date": "2027-06-14"
+    },
+    {
+      "generic_name": "阿托伐他汀钙片",
+      "brand_name": "立普妥",
+      "quantity_on_hand": 4000,
+      "batch_number": "MY-251120-C",
+      "warehouse_location": "天津二号库-贵重药区",
+      "expiry_date": "2027-11-19"
+    },
+    {
+      "generic_name": "阿司匹林肠溶片",
+      "brand_name": "拜阿司匹灵",
+      "quantity_on_hand": 2000,
+      "batch_number": "MY-250101-A",
+      "warehouse_location": "北京二号库-常温区",
+      "expiry_date": "2027-01-01"
+    },
+    {
+      "generic_name": "阿司匹林肠溶片",
+      "brand_name": "拜阿司匹灵",
+      "quantity_on_hand": 4500,
+      "batch_number": "MY-250615-B",
+      "warehouse_location": "天津一号库-常温区",
+      "expiry_date": "2027-06-14"
+    },
+    {
+      "generic_name": "阿司匹林肠溶片",
+      "brand_name": "拜阿司匹灵",
+      "quantity_on_hand": 7000,
+      "batch_number": "MY-251120-C",
+      "warehouse_location": "北京一号库-常温区",
+      "expiry_date": "2027-11-19"
+    },
+    {
+      "generic_name": "硫酸氢氯吡格雷片",
+      "brand_name": "波立维",
+      "quantity_on_hand": 1800,
+      "batch_number": "MY-250305-17A",
+      "warehouse_location": "北京二号库-贵重药区",
+      "expiry_date": "2027-03-04"
+    },
+    {
+      "generic_name": "硫酸氢氯吡格雷片",
+      "brand_name": "波立维",
+      "quantity_on_hand": 3600,
+      "batch_number": "MY-250718-17B",
+      "warehouse_location": "上海一号库-贵重药区",
+      "expiry_date": "2027-07-17"
+    },
+    {
+      "generic_name": "硫酸氢氯吡格雷片",
+      "brand_name": "波立维",
+      "quantity_on_hand": 5500,
+      "batch_number": "MY-251202-17C",
+      "warehouse_location": "天津二号库-贵重药区",
+      "expiry_date": "2027-12-01"
+    },
+    {
+      "generic_name": "瑞舒伐他汀钙片",
+      "brand_name": "可定",
+      "quantity_on_hand": 2200,
+      "batch_number": "MY-250305-18A",
+      "warehouse_location": "天津一号库-贵重药区",
+      "expiry_date": "2027-03-04"
+    },
+    {
+      "generic_name": "瑞舒伐他汀钙片",
+      "brand_name": "可定",
+      "quantity_on_hand": 4000,
+      "batch_number": "MY-250718-18B",
+      "warehouse_location": "北京二号库-贵重药区",
+      "expiry_date": "2027-07-17"
+    },
+    {
+      "generic_name": "瑞舒伐他汀钙片",
+      "brand_name": "可定",
+      "quantity_on_hand": 6200,
+      "batch_number": "MY-251202-18C",
+      "warehouse_location": "上海二号库-贵重药区",
+      "expiry_date": "2027-12-01"
+    },
+    {
+      "generic_name": "琥珀酸美托洛尔缓释片",
+      "brand_name": "倍他乐克",
+      "quantity_on_hand": 4500,
+      "batch_number": "MY-250305-22A",
+      "warehouse_location": "北京二号库-慢病区",
+      "expiry_date": "2027-03-04"
+    },
+    {
+      "generic_name": "琥珀酸美托洛尔缓释片",
+      "brand_name": "倍他乐克",
+      "quantity_on_hand": 7200,
+      "batch_number": "MY-250718-22B",
+      "warehouse_location": "上海二号库-慢病区",
+      "expiry_date": "2027-07-17"
+    },
+    {
+      "generic_name": "琥珀酸美托洛尔缓释片",
+      "brand_name": "倍他乐克",
+      "quantity_on_hand": 10000,
+      "batch_number": "MY-251202-22C",
+      "warehouse_location": "天津一号库-慢病区",
+      "expiry_date": "2027-12-01"
+    },
+    {
+      "generic_name": "依折麦布片",
+      "brand_name": "益适纯",
+      "quantity_on_hand": 1200,
+      "batch_number": "MY-250410-33A",
+      "warehouse_location": "上海一号库-贵重药区",
+      "expiry_date": "2027-04-09"
+    },
+    {
+      "generic_name": "依折麦布片",
+      "brand_name": "益适纯",
+      "quantity_on_hand": 2400,
+      "batch_number": "MY-250822-33B",
+      "warehouse_location": "北京二号库-贵重药区",
+      "expiry_date": "2027-08-21"
+    },
+    {
+      "generic_name": "依折麦布片",
+      "brand_name": "益适纯",
+      "quantity_on_hand": 3600,
+      "batch_number": "MY-251218-33C",
+      "warehouse_location": "天津二号库-贵重药区",
+      "expiry_date": "2027-12-17"
+    }
+  ],
+  "totals": {
+    "立普妥": 7500,
+    "拜阿司匹灵": 13500,
+    "波立维": 10900,
+    "可定": 12400,
+    "倍他乐克": 21700,
+    "益适纯": 7200
+  },
+  "overall": 73200
+}

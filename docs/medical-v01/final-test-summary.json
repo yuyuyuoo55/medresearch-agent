@@ -1,0 +1,26 @@
+{
+  "B": {
+    "thread_id": "afadbab6-d828-4847-8bf6-fc4d7658c558",
+    "assistant_call_events": 1,
+    "tool_event_occurrences": 2,
+    "files": []
+  },
+  "C": {
+    "thread_id": "49ae29f8-cd26-4036-bc94-8c922eadefc5",
+    "assistant_call_events": 1,
+    "tool_event_occurrences": 3,
+    "files": []
+  },
+  "D": {
+    "thread_id": "a4113c34-62e1-48f1-87a5-aeb7a8432cb4",
+    "assistant_call_events": 1,
+    "tool_event_occurrences": 1,
+    "files": []
+  },
+  "E": {
+    "thread_id": "f7fc9093-2073-4698-9fa3-f308d4c05cc9",
+    "assistant_call_events": 3,
+    "tool_event_occurrences": 10,
+    "files": []
+  }
+}

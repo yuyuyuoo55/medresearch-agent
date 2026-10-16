@@ -9,11 +9,33 @@ from contextvars import ContextVar, Token
 from typing import Optional
 
 # ContextVar 是协程级上下文变量，适合 FastAPI 这类异步 Web 服务
+# gpt:ContextVar 让不同请求分别保存自己的值，而同一次请求里的函数又能方便地取到这个值。
 # 它可以避免多个并发请求共用全局变量时出现 thread_id 或 session_dir 串台
+
+
+# 等号右边：创建上下文变量
+# 意思是：
+# - 创建一个上下文变量。
+# - 给它取个内部名字，叫 "session_dir"，方便识别。
+# - 当前上下文还没设置值时，默认返回 None。
+
+# 等号左边：保存对象，并标注类型
+# _session_dir_ctx：Python 变量名，保存刚创建的对象；开头的 _ 表示约定在模块内部使用。
+# ContextVar[...]：说明它是一个上下文变量。
+# Optional[str]：说明里面的值可以是字符串，也可以是 None。
+
+# 总结:
+# asyncio：安排不同请求任务交替执行。
+# ContextVar：在交替执行时，让每个请求读到自己的值，避免串到别人的数据。
+# threading.local 只认线程，A、B 又在同一个线程，所以它们用的是同一份存储。
+
+# 设置当前任务生成文件的会话目录
 _session_dir_ctx: ContextVar[Optional[str]] = ContextVar(
     "session_dir",
     default=None,
 )
+
+# 设置当前任务对应的前端连接和 Agent 执行线程
 _thread_id_ctx: ContextVar[Optional[str]] = ContextVar(
     "thread_id",
     default=None,

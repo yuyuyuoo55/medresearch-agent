@@ -24,6 +24,15 @@ frontend/.vite/
 venv/
 env/
 .env
+# Local configuration and runtime evidence (publish reviewed examples only)
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+*.log
+examples/agent_workspace/
+app/tools/examples/
 __pycache__/
 *.py[cod]
 *$py.class

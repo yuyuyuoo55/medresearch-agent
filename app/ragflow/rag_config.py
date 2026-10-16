@@ -23,4 +23,4 @@ def _load_ragflow_env() -> Tuple[Optional[str], Optional[str]]:
     # RAGFlow SDK 初始化只需要这两个核心字段：认证 API Key 和服务基础地址
     api_key = os.getenv("RAGFLOW_API_KEY")
     base_url = os.getenv("RAGFLOW_API_URL")
-    return api_key, base_url
+    return (api_key, base_url)

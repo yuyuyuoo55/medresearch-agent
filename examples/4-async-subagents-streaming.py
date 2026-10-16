@@ -129,6 +129,8 @@ if __name__ == "__main__":
     # asyncio.run(test_stream("北京今天的天气怎么样？"))
     async def batch_run():
         # 这里得到的是协程对象；传给 gather 后，会由事件循环并发调度
+
+        #调用后先得到两个协程对象，并没有立即执行里面的代码。
         task1 = test_stream("北京今天的天气怎么样？")
         task2 = test_stream("请将'你是最棒的'翻译成英文。")
 
@@ -137,7 +139,16 @@ if __name__ == "__main__":
         print(type(task2))
 
         # gather 会等待两个协程都完成；哪个请求先拿到结果，就会先输出自己的流式片段
+        # 天气任务和翻译任务并发推进，遇到模型请求等等待操作时，可以切换执行其他任务。
+        # 只使用 gather()：一起执行、一起等待 await 等待两个任务都完成。
         await asyncio.gather(task1, task2)
+
+        #：加上 create_task()：先创建任务，再决定什么时候等待
+        # task1 = asyncio.create_task(test_stream("北京天气"))
+        # task2 = asyncio.create_task(test_stream("翻译英文"))
+
+        #注意：create_task() 并不是让代码当场执行完毕，而是安排任务在事件循环获得执行机会时运行。
+        # await asyncio.gather(task1, task2)
 
     asyncio.run(batch_run())
 

@@ -20,7 +20,7 @@ from app.api.monitor import monitor
 from app.utils.path_utils import resolve_path
 from app.utils.word_converter import convert_md_to_pdf as convert_md_to_pdf_via_word
 
-
+# 它不重新生成内容，只基于已经写好的 .md 文件做格式转换。
 @tool
 def convert_md_to_pdf(
     md_filename: Annotated[str, "要转换的Markdown文档路径（包含.md后缀）"],
@@ -41,6 +41,23 @@ def convert_md_to_pdf(
         # 输入路径必须先落到当前会话目录，避免模型传入任意系统路径
         session_dir = get_session_context()
         md_path = Path(md_filename).with_suffix(".md")
+        # with_suffix替换后缀
+        # 拆开看
+        # md_path
+        # ↓
+        # reports/研究报告.md
+        #         │
+        #         │ str()
+        #         ↓
+        # "reports/研究报告.md"
+        #         │
+        #         │ resolve_path(..., session_dir)
+        #         ↓
+        # D:/deepagent/sessions/A001/reports/研究报告.md
+        #         │
+        #         │ Path()
+        #         ↓
+        # md_abs_path
         md_abs_path = Path(resolve_path(str(md_path), session_dir))
 
         if not md_abs_path.exists():
