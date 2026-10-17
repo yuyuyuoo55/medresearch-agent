@@ -38,6 +38,7 @@ export default function App() {
   const [stagedItems, setStagedItems] = useState<UploadedItem[]>([]);
   const [turns, setTurns] = useState<ChatTurn[]>([]);
   const streamRef = useRef<HTMLElement | null>(null);
+  const workspaceScrollRef = useRef<HTMLDivElement | null>(null);
   const session = useDeepAgentSession();
 
   useEffect(() => {
@@ -60,7 +61,8 @@ export default function App() {
   }, [session.events, session.files, session.isRunning, session.result]);
 
   useEffect(() => {
-    const streamNode = streamRef.current;
+    const mobileScrollNode = workspaceScrollRef.current;
+    const streamNode = mobileScrollNode?.clientHeight ? mobileScrollNode : streamRef.current;
     if (!streamNode) {
       return;
     }
@@ -71,7 +73,8 @@ export default function App() {
         behavior: "smooth"
       });
     });
-  }, [turns]);
+  // 只在提交新问题时定位，后续执行事件不打断用户阅读。
+  }, [turns.length]);
 
   async function handleSubmit() {
     const cleanQuery = query.trim();
@@ -146,41 +149,39 @@ export default function App() {
 
   return (
     <div className={`chat-app-shell ${hasResearch ? "has-research" : "is-empty"}`}>
-      <aside className="chat-sidebar" aria-label="当前会话">
+      <a className="skip-link" href="#research-content">跳到研究内容</a>
+      <header className="workspace-header">
         <div className="sidebar-brand">
           <span className="brand-mark" aria-hidden>研</span>
           <div><strong>医研智析</strong><span>MEDRESEARCH AI</span></div>
         </div>
-        <Button aria-label="新建研究" className="new-chat-button" icon={<PlusOutlined aria-hidden />} onClick={handleNewSession}>新建研究</Button>
-        <div className="sidebar-session">
-          <span className="sidebar-label">当前研究</span>
-          <p className="session-title" title={currentTitle}><span className="session-dot" />{currentTitle}</p>
-          <p className="session-caption">仅当前会话</p>
-        </div>
-        <div className="sidebar-footer">
-          <p>医药企业<br />AI 研究分析助手</p>
+        <span className="current-session-label">当前会话</span>
+        <div className="header-actions">
           <div className={`connection-state ${online ? "is-online" : ""}`} role="status">
             <span />{connectionLabel(session.connectionState)}
           </div>
-          <details className="connection-details"><summary>连接详情</summary><p>会话：{session.threadId}</p><code>{API_BASE_URL}</code><code>{WS_BASE_URL}</code></details>
+          <Button aria-label="新建研究" className="new-chat-button" icon={<PlusOutlined aria-hidden />} onClick={handleNewSession}>新建研究</Button>
         </div>
-      </aside>
-      <main className="chat-main">
+      </header>
+      <main className="chat-main" id="research-content" tabIndex={-1}>
         <header className="chat-topbar">
-          <div className="topbar-brand">医研智析<span>医药企业 AI 研究分析助手</span></div>
+          <span className="workspace-caption">医药企业 AI 研究分析助手<span>仅当前会话</span></span>
           <div className={`run-indicator ${session.isRunning ? "is-running" : hasError ? "is-error" : ""}`} role="status">
             {session.isRunning ? <LoadingOutlined aria-hidden /> : hasError ? <CloseOutlined aria-hidden /> : wasCancelled ? <MinusOutlined aria-hidden /> : hasResult ? <CheckOutlined aria-hidden /> : <span className="session-dot" />}
             {statusLabel}
+            <details className="connection-details"><summary>连接详情</summary><p>连接：{connectionLabel(session.connectionState)}</p><p>会话：{session.threadId}</p><code>{API_BASE_URL}</code><code>{WS_BASE_URL}</code></details>
           </div>
         </header>
         {displayError ? <Alert className="chat-alert" message={displayError} showIcon type="error" /> : null}
         <div className="workspace-grid">
-          <div className="workspace-research">
+          <div className="workspace-scroll" ref={workspaceScrollRef}>
             <section className="chat-stream-panel" ref={streamRef} aria-label="研究内容">
-              {hasResearch ? <div className="research-heading"><span className="panel-kicker">CURRENT RESEARCH</span><h1 title={currentTitle}>{currentTitle.length > 30 ? `${currentTitle.slice(0, 30)}…` : currentTitle}</h1><p>当前会话 · 教学模拟数据</p></div> : null}
+              {hasResearch ? <div className="research-heading"><span className="panel-kicker">当前研究</span><h1 title={currentTitle}>{currentTitle.length > 30 ? `${currentTitle.slice(0, 30)}…` : currentTitle}</h1><p>当前会话 · 教学模拟数据</p></div> : null}
               <ConversationThread onUseExample={setQuery} turns={turns} />
             </section>
-            <div className="workspace-composer">
+            {hasResearch ? <ResearchActivity events={session.events} isRunning={session.isRunning} /> : null}
+          </div>
+          <div className="workspace-composer">
               <ChatComposer
                 isCancelling={session.isCancelling}
                 isRunning={session.isRunning}
@@ -196,9 +197,7 @@ export default function App() {
                 uploadedItems={session.uploadedItems}
               />
               <p className="composer-footnote">仅供医药企业业务演示 · 不提供临床用药建议</p>
-            </div>
           </div>
-          {hasResearch ? <ResearchActivity events={session.events} isRunning={session.isRunning} /> : null}
         </div>
       </main>
     </div>

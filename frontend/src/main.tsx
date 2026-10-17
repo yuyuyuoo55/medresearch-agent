@@ -11,17 +11,19 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       theme={{
         algorithm: theme.defaultAlgorithm,
         token: {
-          colorPrimary: "#245c43",
-          colorSuccess: "#527d61",
+          colorPrimary: "#6b7352",
+          colorSuccess: "#6b7352",
           colorWarning: "#b3894b",
           colorError: "#aa5a4e",
-          colorInfo: "#527d61",
-          colorBgBase: "#fafbf9",
-          colorBgContainer: "#ffffff",
-          colorBorder: "#dce4d8",
-          borderRadius: 8,
+          colorInfo: "#6b7352",
+          colorBgBase: "#f8f5ef",
+          colorBgContainer: "#fffdf9",
+          colorText: "#302f2b",
+          colorTextSecondary: "#76736a",
+          colorBorder: "#e3ded4",
+          borderRadius: 6,
           fontFamily:
-            "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif",
+            "'Research Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif",
           fontFamilyCode:
             "'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace"
         },
@@ -31,8 +33,8 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             primaryShadow: "none"
           },
           Input: {
-            activeBorderColor: "#245c43",
-            hoverBorderColor: "#527d61"
+            activeBorderColor: "#6b7352",
+            hoverBorderColor: "#555e3e"
           }
         }
       }}

@@ -1,7 +1,7 @@
 import {
   PaperClipOutlined,
   PlusOutlined,
-  SendOutlined,
+  ArrowRightOutlined,
   StopOutlined
 } from "@ant-design/icons";
 import { Button, Tooltip, Upload } from "antd";
@@ -148,7 +148,7 @@ export function ChatComposer({
                   disabled={isRunning || isUploading}
                   icon={<PaperClipOutlined />}
                 >
-                  会话附件
+                  添加附件
                 </Button>
               </Tooltip>
             </Upload>
@@ -159,10 +159,9 @@ export function ChatComposer({
               aria-label={isRunning ? "取消当前任务" : "发送任务"}
               className={isRunning ? "send-button send-button--cancel" : "send-button"}
               disabled={isRunning ? isCancelling : !canSubmit}
-              icon={isRunning ? <StopOutlined /> : <SendOutlined />}
+              icon={isRunning ? <StopOutlined /> : <ArrowRightOutlined />}
               loading={isCancelling}
               onClick={isRunning ? onCancel : onSubmit}
-              shape="circle"
               type="primary"
             />
           </Tooltip>

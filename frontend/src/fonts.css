@@ -1,0 +1,4 @@
+/* Noto UI subsets; other glyphs use the system CJK fallback. License: public/fonts/OFL.txt. */
+@font-face { font-family: "Research Sans"; font-style: normal; font-weight: 400; font-display: swap; src: url("/fonts/ui-regular.ttf") format("truetype"); }
+@font-face { font-family: "Research Sans"; font-style: normal; font-weight: 600; font-display: swap; src: url("/fonts/ui-semibold.ttf") format("truetype"); }
+@font-face { font-family: "Research Display"; font-style: normal; font-weight: 600; font-display: swap; src: url("/fonts/display-semibold.ttf") format("truetype"); }

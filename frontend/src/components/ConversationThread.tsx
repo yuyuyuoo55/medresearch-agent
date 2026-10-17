@@ -222,8 +222,7 @@ function ArtifactShelf({ files }: { files: OutputFile[] }) {
               className="artifact-download"
               href={getDownloadUrl(file.path)}
               icon={<DownloadOutlined />}
-              shape="circle"
-            />
+            >下载报告</Button>
           </Tooltip>
         </div>
       ))}

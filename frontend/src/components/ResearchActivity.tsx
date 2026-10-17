@@ -25,8 +25,8 @@ function eventCopy(event: MonitorMessage): { title: string; description: string 
 
 export function ResearchActivity({ events, isRunning }: { events: MonitorMessage[]; isRunning: boolean }) {
   return (
-    <details className="activity-panel" open aria-label="Agent 执行过程">
-      <summary className="activity-heading"><h2>Agent 执行过程</h2><span>与研究回答同步呈现</span></summary>
+    <details className="activity-panel" open aria-label="执行记录">
+      <summary className="activity-heading"><h2>执行记录</h2><span>与研究回答同步呈现</span></summary>
       <div className="activity-content">
         {events.length === 0 ? <p className="activity-empty">等待后端推送执行事件</p> : (
           <ol className="activity-timeline">
@@ -35,6 +35,7 @@ export function ResearchActivity({ events, isRunning }: { events: MonitorMessage
               const active = isRunning && index === events.length - 1 && !["task_result", "error", "task_cancelled"].includes(event.event);
               return <li className={`activity-step ${active ? "is-current" : ""} ${event.event === "error" ? "is-error" : ""}`} key={`${event.timestamp}-${index}`}>
                 <span className="activity-node" aria-hidden>{event.event === "task_result" ? <CheckOutlined /> : event.event === "error" ? <CloseOutlined /> : event.event === "task_cancelled" ? <MinusOutlined /> : <span />}</span>
+                <time className="activity-time" dateTime={event.timestamp}>{new Date(event.timestamp).toLocaleTimeString("zh-CN", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}</time>
                 <h3>{copy.title}</h3><p>{copy.description}</p>
               </li>;
             })}
