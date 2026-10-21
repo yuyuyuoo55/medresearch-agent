@@ -7,16 +7,46 @@ create_ask_delete 用于创建临时会话、发起一次问题查询，并在�
 """
 
 import json
+import time
 
+import requests
 from langchain_core.tools import tool
 from ragflow_sdk import RAGFlow
 
+from app.api.context import get_thread_context
 from app.api.monitor import monitor
 from app.ragflow.rag_config import _load_ragflow_env
 
 # 模块级复用 RAGFlow 客户端，避免每次工具调用都重新初始化 SDK 对象
 api_key, base_url = _load_ragflow_env()
 ragflow_client = RAGFlow(api_key=api_key, base_url=base_url)
+
+# 单次提问的总时长上限（秒）：RAGFlow 内部要跑 LLM 生成答案，同机部署时可能很慢，
+# 没有上限会把整个任务拖死（实测卡在 create_ask_delete 后再无任何日志）。
+RAGFLOW_ASK_TIMEOUT_SECONDS = 90
+# 单次读取超时（秒）：连接 10 秒内必须建好，之后每 60 秒必须收到数据，否则抛 Timeout
+RAGFLOW_READ_TIMEOUT_SECONDS = 60
+# 单次任务最多向 RAGFlow 提问几次：模型可能一次并发问 6 个问题，既慢又浪费
+MAX_RAGFLOW_ASKS = 3
+
+# 任务级计数器：{thread_id: 已提问次数}（与网络搜索同一套机制）
+_RAGFLOW_CALLS: dict[str, int] = {}
+_DEFAULT_KEY = "__default__"
+
+
+def _ragflow_key() -> str:
+    return get_thread_context() or _DEFAULT_KEY
+
+
+def reset_ragflow_calls(thread_id: str | None = None) -> None:
+    """每个新任务开始时调用，把该任务的 RAGFlow 提问计数归零"""
+    _RAGFLOW_CALLS[thread_id or _ragflow_key()] = 0
+
+
+def get_ragflow_calls() -> int:
+    """读取当前任务的已提问次数（测试/日志用）"""
+    return _RAGFLOW_CALLS.get(_ragflow_key(), 0)
+
 
 
 # @tool 会把函数签名和 docstring 暴露给 DeepAgents，模型据此决定是否调用以及如何填参
@@ -63,14 +93,25 @@ def create_ask_delete(chat_name, question) -> str:
     :param question: 本次提问的问题
     :return: RAGFlow 返回的回答文本；异常时返回中文错误提示
     """
+    # 任务级次数限制：超过上限就不再真正请求 RAGFlow，返回提示让模型用已有资料作答
+    key = _ragflow_key()
+    used = _RAGFLOW_CALLS.get(key, 0)
+    if used >= MAX_RAGFLOW_ASKS:
+        return (
+            f"本次任务的知识库提问次数已达上限（{MAX_RAGFLOW_ASKS} 次），"
+            "请立即基于已获得的资料整理回答，不要再次提问。"
+        )
+    _RAGFLOW_CALLS[key] = used + 1
+
     # 埋点：记录目标助手和问题，便于前端展示当前知识库检索动作
     monitor.report_tool(
         tool_name="ragflow提问助手工具：create_ask_delete",
         args={"chat_name": chat_name, "question": question},
     )
 
-    session=None
+    session = None
     use_chat = None
+    response = None
     try:
         # 先按名称找到 Chat 对象；真正提问时还需要在 Chat 下创建 Session
         chats = ragflow_client.list_chats(name=chat_name)
@@ -82,23 +123,35 @@ def create_ask_delete(chat_name, question) -> str:
         # 每次工具调用只创建一个临时会话，避免多轮上下文污染当前问题
         session = use_chat.create_session(name="temp_session_ask")
 
-        # SDK 暂未直接封装当前流式接口，这里通过底层 post 调用 Chat completions API
-        response = ragflow_client.post(
-            f"/chats/{use_chat.id}/completions",
-            {
+        # SDK 的 post() 内部写死了 requests.post，不支持传 timeout，
+        # 所以这里直接用 requests 调同一个接口，才能设置连接/读取超时。
+        # 没有超时时，RAGFlow 不返回数据会把整个任务无限期挂住（实测复现过）。
+        response = requests.post(
+            url=f"{ragflow_client.api_url}/chats/{use_chat.id}/completions",
+            json={
                 "messages": [{"role": "user", "content": question}],
                 "stream": True,
                 "session_id": session.id,
             },
+            headers=ragflow_client.authorization_header,
             stream=True,
+            timeout=(10, RAGFLOW_READ_TIMEOUT_SECONDS),
         )
         result = ""
+        started_at = time.time()
         # iter_lines:把服务器返回的数据，一行一行地拿出来。
         # line 是一个字符串 str。
         # 它大概长这样：
         # line = 'data: {"data": {"name": "张三"}}'
 
         for line in response.iter_lines(decode_unicode=True):
+            # 总时长兜底：即使服务一直慢慢吐数据，也不能超过上限
+            if time.time() - started_at > RAGFLOW_ASK_TIMEOUT_SECONDS:
+                return (
+                    f"知识库检索超时（超过 {RAGFLOW_ASK_TIMEOUT_SECONDS} 秒），"
+                    "请基于其它来源作答。"
+                )
+
             # 这一行如果是空的，就跳过，不处理。
             if not line:
                 continue
@@ -133,9 +186,21 @@ def create_ask_delete(chat_name, question) -> str:
 
         return result
 
+    except requests.exceptions.Timeout:
+        # 连接/读取超时：返回可读提示，让模型用其它来源继续，而不是把任务挂死
+        return (
+            f"知识库检索超时（超过 {RAGFLOW_ASK_TIMEOUT_SECONDS} 秒），"
+            "请基于其它来源作答。"
+        )
     except Exception as e:
         return f"提问失败，错误原因：{str(e)}"
     finally:
+        # 关闭流式响应，避免连接泄漏
+        if response is not None:
+            try:
+                response.close()
+            except Exception:
+                pass
         # use_chat 存在吗？
         #     ↓
         # 是 → session 存在吗？

@@ -14,7 +14,12 @@ from langchain.chat_models import init_chat_model
 load_dotenv(find_dotenv())
 
 # 使用 OpenAI 兼容协议接入模型；具体模型名由 .env 中的 LLM_QWEN_MAX 控制
+# timeout=60：单次模型请求最多等 60 秒，避免请求卡住把任务无限期挂死
+# （OpenAI 客户端默认超时 600 秒且会自动重试，卡住时能拖十几分钟）
+# max_retries=1：失败只重试一次，让错误尽快暴露到前端
 model = init_chat_model(
     model=os.getenv("LLM_QWEN_MAX"),
     model_provider="openai",
+    timeout=60,
+    max_retries=1,
 )
