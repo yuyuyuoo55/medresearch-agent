@@ -11,6 +11,8 @@ from app.tools.tavily_tool import internet_search
 
 # 字典式子智能体的核心字段来自 YAML，便于后续只改配置就能调整路由描述和行为约束
 # tools 列表声明该子智能体可以调用的真实外部能力
+# 次数限制放在 internet_search 工具内部（任务级计数），不放中间件：
+# 中间件的 run_limit 按「子智能体一次运行」计数，主智能体重复调用子智能体会绕过限制。
 network_search_agent = {
     "name": sub_agents_content["tavily"]["name"],
     "description": sub_agents_content["tavily"]["description"],

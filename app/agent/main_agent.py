@@ -30,6 +30,9 @@ from app.api.monitor import monitor
 from app.tools.markdown_tools import generate_markdown
 from app.tools.pdf_tools import convert_md_to_pdf
 from app.tools.upload_file_read_tool import read_file_content
+# 网络搜索的「任务级」计数重置：工具内部最多执行 MAX_SEARCH_CALLS 次，
+# 每个新任务开始时必须归零，否则第二个任务会直接超限。
+from app.tools.tavily_tool import reset_search_calls
 
 # 主智能体是调度中心：
 # 1. tools 只放最终交付相关的文件工具
@@ -59,6 +62,9 @@ async def run_deep_agent(task_query, session_id):
 
     # 第一步：创建当前会话输出目录 session_dir
     print(f"[MainAgent] 开始执行会话，session_id={session_id}")
+
+    # 网络搜索次数计数器归零：工具层限制是任务级的，不重置会让同一进程里的后续任务直接超限
+    reset_search_calls(session_id)
 
     # 每个会话独立使用 output/session_{session_id}，避免不同用户的产物互相覆盖
     session_dir = project_root_path / "output" / f"session_{session_id}"
