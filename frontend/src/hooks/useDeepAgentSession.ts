@@ -46,10 +46,7 @@ export function useDeepAgentSession() {
     }
   }, []);
 
-  const resetSession = useCallback(() => {
-    const nextThreadId = createThreadId();
-    storeThreadId(nextThreadId);
-    setThreadId(nextThreadId);
+  const clearSessionState = useCallback(() => {
     setEvents([]);
     setFiles([]);
     setSessionPath("");
@@ -60,6 +57,27 @@ export function useDeepAgentSession() {
     setIsRunning(false);
     setIsCancelling(false);
   }, []);
+
+  /** 新建研究：生成新的 thread_id，并清空当前界面状态（旧会话由上层保存到历史列表） */
+  const resetSession = useCallback(() => {
+    const nextThreadId = createThreadId();
+    storeThreadId(nextThreadId);
+    setThreadId(nextThreadId);
+    clearSessionState();
+  }, [clearSessionState]);
+
+  /** 切换到历史会话：复用该会话已有的 thread_id，重新建立 WebSocket 连接 */
+  const switchSession = useCallback(
+    (nextThreadId: string) => {
+      if (!nextThreadId || nextThreadId === threadId) {
+        return;
+      }
+      storeThreadId(nextThreadId);
+      setThreadId(nextThreadId);
+      clearSessionState();
+    },
+    [clearSessionState, threadId]
+  );
 
   const refreshFiles = useCallback(async () => {
     if (!sessionPath) {
@@ -311,6 +329,7 @@ export function useDeepAgentSession() {
     lastPongAt,
     refreshFiles,
     resetSession,
+    switchSession,
     result,
     sessionPath,
     stats,

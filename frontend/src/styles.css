@@ -226,3 +226,52 @@ button:active:not(:disabled), .ant-btn:active:not(:disabled) { transform: transl
   .composer-shell { padding: 12px 13px 10px; } .composer-shell textarea { font-size: 16px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; } }
+
+/* ===== 多会话：顶部会话切换器 ===== */
+.session-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 340px;
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--canvas);
+  color: var(--ink);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.session-switcher:hover { border-color: var(--brand); background: var(--surface); }
+.session-switcher-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 240px;
+}
+.session-switcher-count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--brand);
+  color: #fff;
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+}
+.session-menu-item { display: flex; align-items: center; gap: 10px; min-width: 280px; padding: 2px 0; }
+.session-menu-text { display: flex; flex-direction: column; gap: 2px; flex: 1; overflow: hidden; }
+.session-menu-title {
+  font-size: 13px;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
+}
+.session-menu-title.is-active { color: var(--brand); font-weight: 600; }
+.session-menu-meta { font-size: 11px; color: var(--muted); }
+.session-menu-delete { opacity: 0; transition: opacity 0.15s ease; color: var(--muted); }
+.session-menu-item:hover .session-menu-delete { opacity: 1; }
+.session-menu-empty { color: var(--muted); font-size: 12px; }

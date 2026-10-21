@@ -4,8 +4,18 @@ import { useEffect, useRef, useState } from "react";
 import { ChatComposer } from "./components/ChatComposer";
 import { ConversationThread } from "./components/ConversationThread";
 import { ResearchActivity } from "./components/ResearchActivity";
+import { SessionSwitcher } from "./components/SessionSwitcher";
 import type { ChatTurn } from "./components/ConversationThread";
 import { API_BASE_URL, WS_BASE_URL } from "./lib/config";
+import {
+  buildSessionTitle,
+  createSessionRecord,
+  loadSessions,
+  removeSession,
+  saveSessions,
+  upsertSession,
+  type SessionRecord
+} from "./lib/sessions";
 import { useDeepAgentSession } from "./hooks/useDeepAgentSession";
 import type { ConnectionState, UploadedItem } from "./types";
 
@@ -36,12 +46,67 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [submissionError, setSubmissionError] = useState("");
   const [stagedItems, setStagedItems] = useState<UploadedItem[]>([]);
-  const [turns, setTurns] = useState<ChatTurn[]>([]);
   const streamRef = useRef<HTMLElement | null>(null);
   const workspaceScrollRef = useRef<HTMLDivElement | null>(null);
   const session = useDeepAgentSession();
 
+  // ===== 多会话：历史会话列表（localStorage 持久化） =====
+  const [sessions, setSessions] = useState<SessionRecord[]>(() => {
+    const stored = loadSessions();
+    if (stored.some((item) => item.id === session.threadId)) {
+      return stored;
+    }
+    return upsertSession(stored, createSessionRecord(session.threadId));
+  });
+  // 当前会话的消息记录，切换会话时整体替换
+  const [turns, setTurns] = useState<ChatTurn[]>(() => {
+    const stored = loadSessions().find((item) => item.id === session.threadId);
+    return stored?.turns ?? [];
+  });
+  // 刚从历史会话恢复时，跳过「用实时事件覆盖最新一轮」的同步，避免把恢复的内容冲掉
+  const hydratingSessionRef = useRef(false);
+  const sessionsRef = useRef(sessions);
+
   useEffect(() => {
+    sessionsRef.current = sessions;
+  }, [sessions]);
+
+  // 新会话（或首次访问）要保证列表里有记录
+  useEffect(() => {
+    setSessions((previous) => {
+      if (previous.some((item) => item.id === session.threadId)) {
+        return previous;
+      }
+      const next = upsertSession(previous, createSessionRecord(session.threadId));
+      saveSessions(next);
+      return next;
+    });
+  }, [session.threadId]);
+
+  // 当前会话内容变化时写回历史列表
+  useEffect(() => {
+    const current = sessionsRef.current;
+    const index = current.findIndex((item) => item.id === session.threadId);
+    if (index === -1) {
+      return;
+    }
+    const next = upsertSession(current, {
+      ...current[index],
+      title: current[index].title || buildSessionTitle(turns),
+      turns,
+      updatedAt: Date.now()
+    });
+    saveSessions(next);
+    setSessions(next);
+  }, [session.threadId, turns]);
+
+  useEffect(() => {
+    if (hydratingSessionRef.current) {
+      // 刚切回历史会话：turns 已经是完整记录，不要用当前空事件覆盖
+      hydratingSessionRef.current = false;
+      return;
+    }
+
     setTurns((previous) => {
       if (previous.length === 0) {
         return previous;
@@ -135,6 +200,37 @@ export default function App() {
     setStagedItems([]);
   }
 
+  /** 切回历史会话：复用其 thread_id 重新连接 WebSocket，并恢复该会话的消息记录 */
+  function handleSwitchSession(sessionId: string) {
+    if (sessionId === session.threadId) {
+      return;
+    }
+    const record = sessions.find((item) => item.id === sessionId);
+    if (!record) {
+      return;
+    }
+    hydratingSessionRef.current = true;
+    session.switchSession(sessionId);
+    setTurns(record.turns);
+    setQuery("");
+    setSubmissionError("");
+    setStagedItems([]);
+  }
+
+  function handleDeleteSession(sessionId: string) {
+    const next = removeSession(sessions, sessionId);
+    saveSessions(next);
+    setSessions(next);
+    // 删掉的正好是当前会话：回到一个全新的会话
+    if (sessionId === session.threadId) {
+      session.resetSession();
+      setTurns([]);
+      setQuery("");
+      setSubmissionError("");
+      setStagedItems([]);
+    }
+  }
+
   const online = session.connectionState === "connected";
   const latestTurn = turns[turns.length - 1];
   const hasResearch = turns.length > 0;
@@ -155,7 +251,13 @@ export default function App() {
           <span className="brand-mark" aria-hidden>研</span>
           <div><strong>医研智析</strong><span>MEDRESEARCH AI</span></div>
         </div>
-        <span className="current-session-label">当前会话</span>
+        <SessionSwitcher
+          activeId={session.threadId}
+          onDelete={handleDeleteSession}
+          onNew={handleNewSession}
+          onSelect={handleSwitchSession}
+          sessions={sessions}
+        />
         <div className="header-actions">
           <div className={`connection-state ${online ? "is-online" : ""}`} role="status">
             <span />{connectionLabel(session.connectionState)}
