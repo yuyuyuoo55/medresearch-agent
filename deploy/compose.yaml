@@ -1,0 +1,129 @@
+# =============================================================================
+# DeepSearch Agents —— 生产编排（API + Nginx；MySQL 为可选 profile）
+#
+# 使用前必须先创建 deploy/.env（模板见 deploy/.env.example），
+# .env 只存在于服务器上，不进镜像、不进 Git。
+#
+# 启动（默认只起 api + web）：
+#   cd deploy && docker compose up -d --build
+#
+# 需要 MySQL 时（默认不启动，2GB 内存请先看 DEPLOY.md 的风险提示）：
+#   cd deploy && docker compose --profile mysql up -d
+# =============================================================================
+name: deepsearch-agents
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    image: deepsearch-agents-api:local
+    restart: unless-stopped
+    # 密钥通过环境变量注入容器，不写进镜像、不落地成容器内文件
+    env_file:
+      - .env
+    environment:
+      TZ: Asia/Shanghai
+    # 运行时产生的文件：用命名卷持久化。
+    # 不用「宿主机目录绑定挂载」的原因：容器以 uid 10001 运行，
+    # 绑定挂载的宿主机目录默认属主是 root，会写不进去（需要额外 chown）。
+    volumes:
+      - api-output:/app/app/output
+      - api-updated:/app/app/updated
+    # 只在 Docker 内部网络暴露 8000，不发布到宿主机/公网
+    expose:
+      - "8000"
+    # 让 api 容器能通过 host.docker.internal 访问宿主机上的服务（本机 RAGFlow API 9380）
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      # 用容器自带 python 探活，避免额外安装 curl
+      test:
+        [
+          "CMD",
+          "/app/.venv/bin/python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/docs', timeout=3).read()",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  web:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      # 对外只开放 Web 端口；可用 deploy/.env 里的 WEB_PORT 调整（默认 80）
+      - "${WEB_PORT:-80}:80"
+    volumes:
+      # 前端静态文件：在 Windows 上构建好的 frontend/dist，上传到服务器同一路径
+      - ../frontend/dist:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  # MySQL：默认不启动（Docker Compose profile = mysql）。
+  # 不启动时："查询数据库" 类任务不可用，其余功能（知识库 / 联网搜索 / 文件报告）正常。
+  # 不发布 3306 到宿主机，也不设置 MYSQL_ROOT_HOST=%（不开放 root 远程登录）。
+  # ---------------------------------------------------------------------------
+  mysql:
+    profiles:
+      - mysql
+    image: mysql:8.4
+    container_name: deepsearch-mysql
+    restart: unless-stopped
+    environment:
+      # 仅从 deploy/.env 读取，不在这里写死
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?启动 mysql profile 前必须在 deploy/.env 设置 MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-deepsearch_db}
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=+08:00
+      - --sql-mode=TRADITIONAL
+      # 2GB 内存下压小缓冲池，避免和 API 抢内存
+      - --innodb-buffer-pool-size=96M
+      # 关闭 X Protocol，少占一个端口和一份内存
+      - --mysqlx=0
+    volumes:
+      - mysql-data:/var/lib/mysql
+      # 首次创建数据目录时自动导入教学数据（drugs / inventory / sales_records）
+      - ../docker/mysql/mysql.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD} --silent",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  # 显式命名，方便在宿主机上定位与备份
+  api-output:
+    name: deepsearch-output
+  api-updated:
+    name: deepsearch-updated
+  mysql-data:
+    name: deepsearch-mysql-data

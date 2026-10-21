@@ -1,0 +1,61 @@
+# =============================================================================
+# DeepSearch Agents —— FastAPI 后端镜像
+#
+# 构建上下文是「仓库根目录」（见 deploy/compose.yaml 中的 build.context: ..），
+# 因此下面的 COPY 路径都相对仓库根目录。
+#
+# 手动构建：
+#   docker compose -f deploy/compose.yaml build api
+# =============================================================================
+FROM python:3.12-slim
+
+# PYTHONUNBUFFERED：日志立即刷到 docker logs（项目大量使用 print 输出执行进度）
+# UV_CACHE_DIR：把 uv 缓存放 /tmp，构建完不留在镜像里
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    UV_CACHE_DIR=/tmp/uv-cache \
+    TZ=Asia/Shanghai
+
+WORKDIR /app
+
+# tzdata：python:3.12-slim 不自带时区数据库，compose 里设置了 TZ=Asia/Shanghai。
+# 说明：PDF 由 reportlab 内置 CID 字体（STSong-Light）生成中文，不依赖系统字体，
+# 所以这里不需要安装任何中文字体包。
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+# 1) 先只复制依赖清单，充分利用 Docker 层缓存：
+#    业务代码改动时不会重新安装依赖。
+COPY pyproject.toml uv.lock ./
+
+# 2) 用项目自己的依赖管理方式安装依赖（uv + uv.lock）。
+#    --locked 表示「锁文件必须与 pyproject.toml 一致」，不一致会直接构建失败，
+#    避免服务器上装出和本地不同的依赖版本。
+#    --no-dev 只装运行期依赖。
+RUN pip install --no-cache-dir "uv==0.12.0" \
+    && uv sync --locked --no-dev --python 3.12
+
+# 3) 再复制业务代码。
+#    .env 不会被复制进镜像：仓库根目录的 .dockerignore 已排除 .env / .env.*；
+#    密钥在运行时由 compose 的 env_file 以「环境变量」方式注入。
+COPY app ./app
+
+# 4) 收尾：创建非 root 运行用户 + 两个需要写入的输出目录。
+#    uid/gid 固定为 10001，便于排查文件属主问题。
+RUN groupadd --gid 10001 appuser \
+    && useradd --uid 10001 --gid 10001 --create-home --shell /usr/sbin/nologin appuser \
+    && mkdir -p /app/app/output /app/app/updated \
+    && chown -R appuser:appuser /app/app
+
+USER appuser
+
+# 容器内监听 0.0.0.0:8000（compose 未把 8000 发布到宿主机，只走内部网络给 Nginx）
+EXPOSE 8000
+
+# 必须只跑 1 个 worker、且不能用 --reload：
+#   InMemorySaver（会话记忆）、active_tasks、WebSocket 连接表都保存在进程内存中，
+#   多 worker 会让同一 thread_id 的请求落到不同进程，导致前端收不到执行事件。
+# 直接调用 .venv 里的 python，运行期不再依赖 uv。
+CMD ["/app/.venv/bin/python", "-m", "uvicorn", "app.api.server:app", "--host", "0.0.0.0", "--port", "8000"]
