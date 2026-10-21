@@ -76,3 +76,4 @@ Thumbs.db
 
 # 个人面试训练笔记（不提交）
 面试特训/
+!**/.env.production

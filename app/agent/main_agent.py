@@ -8,6 +8,7 @@ session_id 创建独立工作目录，并把工具调用、子智能体调用和
 
 import asyncio
 import shutil
+import time
 from pathlib import Path
 
 from deepagents import create_deep_agent
@@ -61,6 +62,19 @@ async def run_deep_agent(task_query, session_id):
 
     # 每个会话独立使用 output/session_{session_id}，避免不同用户的产物互相覆盖
     session_dir = project_root_path / "output" / f"session_{session_id}"
+
+    # 同一个 thread_id 再次提交任务时，先把上一轮产物归档，保证「交付文件」只属于本次任务。
+    # 不这么做的话，旧报告会留在同一目录里，前端会把它当成本次任务的交付物。
+    if session_dir.exists() and any(session_dir.iterdir()):
+        archive_dir = (
+            project_root_path
+            / "output"
+            / "_archive"
+            / f"session_{session_id}_{int(time.time())}"
+        )
+        archive_dir.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(session_dir), str(archive_dir))
+
     session_dir.mkdir(parents=True, exist_ok=True)
 
     # 前端和工具使用绝对路径；提示词里只给模型相对路径，降低模型误用系统绝对路径的概率

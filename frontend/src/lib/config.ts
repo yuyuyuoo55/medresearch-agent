@@ -1,4 +1,6 @@
-const DEFAULT_API_BASE_URL = "http://localhost:8000";
+// 默认同源：生产环境由 nginx 把 /api 和 /ws 反代到后端，前端不需要知道后端地址。
+// 本地开发时通过 frontend/.env.local 覆盖成本机地址。
+const DEFAULT_API_BASE_URL = "";
 
 function stripTrailingSlash(value: string): string {
   return value.replace(/\/+$/, "");

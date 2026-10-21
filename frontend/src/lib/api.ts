@@ -56,14 +56,20 @@ export async function uploadSessionFiles(
   });
 }
 
+// 同源部署时 apiUrl 返回的是相对路径（如 "/api/files"），new URL 必须提供 base，
+// 否则浏览器会抛 "Failed to construct 'URL': Invalid URL"。
+function buildApiUrl(path: string): URL {
+  return new URL(apiUrl(path), window.location.origin);
+}
+
 export async function listSessionFiles(path: string): Promise<FileListResponse> {
-  const url = new URL(apiUrl("/api/files"));
+  const url = buildApiUrl("/api/files");
   url.searchParams.set("path", path);
   return requestJson<FileListResponse>(url);
 }
 
 export function getDownloadUrl(path: string): string {
-  const url = new URL(apiUrl("/api/download"));
+  const url = buildApiUrl("/api/download");
   url.searchParams.set("path", path);
   return url.toString();
 }

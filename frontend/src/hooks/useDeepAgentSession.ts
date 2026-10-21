@@ -202,6 +202,10 @@ export function useDeepAgentSession() {
       setIsRunning(true);
       setIsCancelling(false);
       setEvents([]);
+      // 新任务开始时立即清空上一轮的文件列表，避免旧报告显示在本次任务卡片里。
+      // 后端也会把上一轮产物归档到 output/_archive/，随后由 session_created 事件带回新目录。
+      setFiles([]);
+      setSessionPath("");
       setResult("");
       setLastError("");
       try {

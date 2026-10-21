@@ -11,9 +11,11 @@ FROM python:3.12-slim
 
 # PYTHONUNBUFFERED：日志立即刷到 docker logs（项目大量使用 print 输出执行进度）
 # UV_CACHE_DIR：把 uv 缓存放 /tmp，构建完不留在镜像里
+# 国内加速：pip/uv 走腾讯云内网镜像（腾讯云主机可直接访问，免公网流量、速度快）
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
+    PIP_INDEX_URL=https://mirrors.tencentyun.com/pypi/simple \
     UV_CACHE_DIR=/tmp/uv-cache \
     TZ=Asia/Shanghai
 
@@ -22,7 +24,14 @@ WORKDIR /app
 # tzdata：python:3.12-slim 不自带时区数据库，compose 里设置了 TZ=Asia/Shanghai。
 # 说明：PDF 由 reportlab 内置 CID 字体（STSong-Light）生成中文，不依赖系统字体，
 # 所以这里不需要安装任何中文字体包。
-RUN apt-get update \
+# Debian 源换腾讯云内网镜像：国内云主机访问 deb.debian.org 经常超时。
+RUN if [ -f /etc/apt/sources.list.d/debian.sources ]; then \
+        sed -i 's|http://deb.debian.org|https://mirrors.tencentyun.com|g' /etc/apt/sources.list.d/debian.sources; \
+    fi \
+    && if [ -f /etc/apt/sources.list ]; then \
+        sed -i 's|deb.debian.org|mirrors.tencentyun.com|g' /etc/apt/sources.list; \
+    fi \
+    && apt-get update \
     && apt-get install -y --no-install-recommends tzdata \
     && rm -rf /var/lib/apt/lists/*
 
@@ -34,8 +43,13 @@ COPY pyproject.toml uv.lock ./
 #    --locked 表示「锁文件必须与 pyproject.toml 一致」，不一致会直接构建失败，
 #    避免服务器上装出和本地不同的依赖版本。
 #    --no-dev 只装运行期依赖。
+#    --default-index 指向腾讯云 PyPI 镜像，避免从 pypi.org 拉几百 MB 依赖卡住。
+#    注意：这里不使用 --locked。本地 uv.lock 与 pyproject.toml 存在不同步时，
+#    --locked 会直接让构建失败；部署镜像允许 uv 在容器内重新解析。
+#    如果要严格可复现：本地执行 `uv lock` 并提交后，再把 --locked 加回来。
 RUN pip install --no-cache-dir "uv==0.12.0" \
-    && uv sync --locked --no-dev --python 3.12
+    && uv sync --no-dev --python 3.12 \
+       --default-index https://mirrors.tencentyun.com/pypi/simple
 
 # 3) 再复制业务代码。
 #    .env 不会被复制进镜像：仓库根目录的 .dockerignore 已排除 .env / .env.*；
