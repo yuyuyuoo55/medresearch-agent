@@ -4,7 +4,9 @@
 
 ![医研智析新版 React 首页](docs/medical-v01/paper-ui/home-desktop.jpg)
 
-支持当前会话任务提交、取消、附件上传、WebSocket 执行过程、Markdown 回答与真实报告文件下载。会话附件不等于 RAGFlow 自动入库；不提供历史任务恢复。库存与销售使用教学模拟数据，不用于临床决策。
+支持当前会话任务提交、取消、附件上传、WebSocket 执行过程、Markdown 回答与真实报告文件下载。左侧边栏保存本地历史会话（浏览器 localStorage），可切换回已完成的研究；会话附件不等于 RAGFlow 自动入库。库存与销售使用教学模拟数据，不用于临床决策。
+
+▶ **演示视频（78 秒，含中文字幕）**：[docs/医研智析-演示.mp4](docs/医研智析-演示.mp4)
 
 - [新版 UI 设计与验收记录（2026-10-17）](design-qa.md)：暖纸色、橄榄绿、顶部导航与响应式输入区；包含模拟交互验证和截图证据。
 - [正式 React 检查与证据边界（2026-10-17）](docs/medical-v01/verification.md)：TypeScript、Vite 构建及免费界面检查通过；未重新运行付费综合任务。
