@@ -275,3 +275,98 @@ button:active:not(:disabled), .ant-btn:active:not(:disabled) { transform: transl
 .session-menu-delete { opacity: 0; transition: opacity 0.15s ease; color: var(--muted); }
 .session-menu-item:hover .session-menu-delete { opacity: 1; }
 .session-menu-empty { color: var(--muted); font-size: 12px; }
+
+/* ===== 多会话：左侧边栏 ===== */
+.app-layout {
+  display: flex;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--canvas);
+}
+.app-layout > .chat-app-shell {
+  flex: 1;
+  min-width: 0;
+}
+.session-sidebar {
+  width: 252px;
+  flex: 0 0 252px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 12px;
+  border-right: 1px solid var(--line);
+  background: var(--surface);
+  overflow: hidden;
+}
+.session-sidebar-head { flex-shrink: 0; }
+.sidebar-new-chat.ant-btn {
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #fffdf8;
+  color: var(--ink);
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.sidebar-new-chat.ant-btn:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+.session-sidebar-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-right: 2px;
+}
+.sidebar-group-title {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--ink);
+  transition: background 0.15s ease;
+}
+.sidebar-item:hover { background: var(--canvas); }
+.sidebar-item.is-active {
+  background: #fffdf8;
+  border: 1px solid var(--line);
+  color: var(--brand);
+  font-weight: 600;
+}
+.sidebar-item-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sidebar-item-delete {
+  opacity: 0;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 2px;
+  line-height: 1;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+.sidebar-item:hover .sidebar-item-delete { opacity: 1; }
+.sidebar-item-delete:hover { color: #b23b2e; }
+.sidebar-empty { margin: 4px 2px; font-size: 12px; line-height: 1.7; color: var(--muted); }
+@media (max-width: 980px) {
+  .session-sidebar { display: none; }
+}

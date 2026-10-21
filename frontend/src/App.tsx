@@ -1,10 +1,10 @@
-import { CheckOutlined, CloseOutlined, LoadingOutlined, MinusOutlined, PlusOutlined } from "@ant-design/icons";
-import { Alert, App as AntApp, Button } from "antd";
+import { CheckOutlined, CloseOutlined, LoadingOutlined, MinusOutlined } from "@ant-design/icons";
+import { Alert, App as AntApp } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { ChatComposer } from "./components/ChatComposer";
 import { ConversationThread } from "./components/ConversationThread";
 import { ResearchActivity } from "./components/ResearchActivity";
-import { SessionSwitcher } from "./components/SessionSwitcher";
+import { SessionSidebar } from "./components/SessionSidebar";
 import type { ChatTurn } from "./components/ConversationThread";
 import { API_BASE_URL, WS_BASE_URL } from "./lib/config";
 import {
@@ -244,25 +244,28 @@ export default function App() {
   const currentTitle = latestTurn?.content || "尚未提交研究";
 
   return (
-    <div className={`chat-app-shell ${hasResearch ? "has-research" : "is-empty"}`}>
+    <div className="app-layout">
+      <SessionSidebar
+        activeId={session.threadId}
+        onDelete={handleDeleteSession}
+        onNew={handleNewSession}
+        onSelect={handleSwitchSession}
+        sessions={sessions}
+      />
+      <div className={`chat-app-shell ${hasResearch ? "has-research" : "is-empty"}`}>
       <a className="skip-link" href="#research-content">跳到研究内容</a>
       <header className="workspace-header">
         <div className="sidebar-brand">
           <span className="brand-mark" aria-hidden>研</span>
           <div><strong>医研智析</strong><span>MEDRESEARCH AI</span></div>
         </div>
-        <SessionSwitcher
-          activeId={session.threadId}
-          onDelete={handleDeleteSession}
-          onNew={handleNewSession}
-          onSelect={handleSwitchSession}
-          sessions={sessions}
-        />
+        <span className="current-session-label">
+          {sessions.find((item) => item.id === session.threadId)?.title || "当前会话"}
+        </span>
         <div className="header-actions">
           <div className={`connection-state ${online ? "is-online" : ""}`} role="status">
             <span />{connectionLabel(session.connectionState)}
           </div>
-          <Button aria-label="新建研究" className="new-chat-button" icon={<PlusOutlined aria-hidden />} onClick={handleNewSession}>新建研究</Button>
         </div>
       </header>
       <main className="chat-main" id="research-content" tabIndex={-1}>
@@ -302,6 +305,7 @@ export default function App() {
           </div>
         </div>
       </main>
+      </div>
     </div>
   );
 }
