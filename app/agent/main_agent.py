@@ -10,6 +10,7 @@ import asyncio
 import shutil
 import time
 from pathlib import Path
+from uuid import uuid4
 
 from deepagents import create_deep_agent
 from langgraph.checkpoint.memory import InMemorySaver
@@ -135,8 +136,14 @@ async def run_deep_agent(task_query, session_id):
     """
 
     # 第五步：使用 main_agent.astream 执行
-    # checkpointer 依赖 thread_id 区分会话记忆；同一 session_id 会复用同一条执行上下文
-    config = {"configurable": {"thread_id": session_id}}
+    # checkpoint 线程键按「任务」唯一（session_id + UUID），不用 session_id 本身：
+    # - WebSocket 推送、文件目录仍然用 session_id（见上面的 ContextVar），前端无感知
+    # - 但 LangGraph 的对话历史必须每任务独立：任务被「取消」或异常中断时，
+    #   历史里会留下「assistant 带 tool_calls、tool 结果没回来」的残破记录，
+    #   复用同一 thread_id 会让下一个任务一开跑就报 400
+    #   （DeepSeek: An assistant message with 'tool_calls' must be followed by tool messages）
+    checkpoint_thread_id = f"{session_id}::{uuid4().hex}"
+    config = {"configurable": {"thread_id": checkpoint_thread_id}}
 
     try:
         # astream 会持续产出模型节点、工具节点和子智能体节点的状态片段
